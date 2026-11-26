@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues and specs are tracked as local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+Issues and specs are tracked as GitHub issues on `personalcyber/fedora-mojo` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
