@@ -1,0 +1,6 @@
+# Real ISO-build config -- holds a password hash/SSH key. Copy
+# config.toml.example to config.toml locally; never commit the real one.
+/config.toml
+
+# bootc-image-builder output (ISOs, disk images, manifests).
+/output/
