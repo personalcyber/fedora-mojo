@@ -125,6 +125,15 @@ check "LibreOffice absent" \
 check "Thunderbird absent" \
   "! rpm -qa | grep -qi thunderbird"
 
+check "Firefox policies.json present at the Fedora path" \
+  "test -f /usr/lib64/firefox/distribution/policies.json"
+
+check "Firefox policies.json has expected policy keys as direct children (not nested under values)" \
+  "python3 -c \"import json,sys; v=json.load(open('/usr/lib64/firefox/distribution/policies.json'))['policies']; sys.exit(0 if ('DisableTelemetry' in v and 'SanitizeOnShutdown' in v and 'values' not in v) else 1)\""
+
+check "Firefox Policy Generator not present in the final image" \
+  "! command -v ffpolicy && ! python3 -c 'import ffpolicy' 2>/dev/null"
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
   exit 1

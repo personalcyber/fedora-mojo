@@ -1,3 +1,42 @@
+# Build-time-only stage for generating Firefox's policies.json from
+# policies.yaml via the Firefox Policy Generator (personalcyber/
+# firefox-policy-generator). PySide6 is a hard dependency of the package
+# even for CLI-only use, so this needs a real Python environment — a
+# plain python:3.12-slim image, not the Fedora bootc base (whose /usr/local
+# is a symlink to /var/usrlocal, and /var isn't part of the baked image at
+# all, so pip can't install there during a build). None of this — Python,
+# pip, PySide6, the generator itself — ends up in the final image; only
+# the one generated JSON file crosses the COPY --from= boundary below.
+FROM docker.io/library/python:3.12-slim AS ffpolicy-builder
+RUN set -eu; \
+    python3 -c "import urllib.request; urllib.request.urlretrieve('https://github.com/personalcyber/firefox-policy-generator/archive/3e1dc2925b83f7220938fc3589a4c8dfe3667645.tar.gz', '/tmp/ffpolicy.tar.gz')"; \
+    echo '91991ba76a63e7c23ac320520d424bc85a96277d94c19de9a8b12b782fae2261  /tmp/ffpolicy.tar.gz' | sha256sum -c -; \
+    mkdir /tmp/ffpolicy-src; \
+    tar xzf /tmp/ffpolicy.tar.gz -C /tmp/ffpolicy-src --strip-components=1; \
+    rm -f /tmp/ffpolicy.tar.gz; \
+    pip install --quiet --no-cache-dir /tmp/ffpolicy-src
+COPY policies.yaml /tmp/policies.yaml
+# --offline skips a live HTTPS schema sync this tool does by default on
+# every build — matching the pinning discipline of everything else here.
+#
+# The post-processing step below is a workaround for a real bug in the
+# pinned commit: `generate`/`export` write the whole internal
+# PolicyDocument (id/name/description/rules/values) under "policies",
+# not just the flattened values — contradicting the tool's own documented
+# design (docs/IMPLEMENTATION_PLAN.md shows to_policies_json() returning
+# just the flattened dict). Verified directly: real Firefox policies.json
+# needs policy names as *direct* children of "policies"; shipping the
+# generator's raw output as-is would mean Firefox silently applies none
+# of these policies at all. Worth reporting upstream.
+#
+# If a future bump of the pinned commit fixes the bug (flattened output
+# directly under "policies"), this `d['policies']['values']` lookup will
+# KeyError the build loudly rather than silently mis-shipping policies —
+# that's intentional: re-check this workaround is still needed before
+# updating the pin.
+RUN python3 -m ffpolicy generate --offline /tmp/policies.yaml -o /tmp/raw-policies.json && \
+    python3 -c "import json; d = json.load(open('/tmp/raw-policies.json')); json.dump({'policies': d['policies']['values']}, open('/tmp/policies.json', 'w'), indent=2, sort_keys=True)"
+
 FROM quay.io/fedora/fedora-budgie-atomic:45
 
 LABEL org.opencontainers.image.title="fedora-mojo" \
@@ -165,6 +204,8 @@ RUN set -eu; \
 # directly: zero matching packages). Removed anyway, defensively, so the
 # image stays correct if a future Fedora release starts including them.
 RUN dnf remove -y 'libreoffice*' 'thunderbird*'
+
+COPY --from=ffpolicy-builder /tmp/policies.json /usr/lib64/firefox/distribution/policies.json
 
 COPY justfile /usr/share/fedora-mojo/justfile
 COPY scripts/ujust /usr/bin/ujust
