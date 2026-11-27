@@ -29,6 +29,9 @@ check "ujust command present" \
 check "ujust update recipe present" \
   "ujust --list | grep -qw update"
 
+check "FreeIPA client package present" \
+  "rpm -q freeipa-client"
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
   exit 1
