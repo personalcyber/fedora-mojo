@@ -48,20 +48,21 @@ check "Montserrat resolves as its own font family (not a fallback) for the boot 
 check "Fedora Mojo Plymouth theme implements the LUKS passphrase prompt (not just cosmetics)" \
   "grep -q SetDisplayPasswordFunction /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.script"
 
-check "Fedora Mojo SDDM theme files present" \
-  "test -f /usr/share/sddm/themes/fedora-mojo/metadata.desktop && \
-   test -f /usr/share/sddm/themes/fedora-mojo/Main.qml && \
-   test -f /usr/share/sddm/themes/fedora-mojo/logo-mark.png"
+check "Fedora Mojo SDDM theme files present under /etc (writable layer, not read-only /usr)" \
+  "test -f /etc/sddm/themes/fedora-mojo/metadata.desktop && \
+   test -f /etc/sddm/themes/fedora-mojo/Main.qml && \
+   test -f /etc/sddm/themes/fedora-mojo/logo-mark.png"
 
-check "Fedora Mojo set as the default SDDM theme" \
-  "grep -qx 'Current=fedora-mojo' /etc/sddm.conf.d/fedora-mojo.conf"
+check "Fedora Mojo set as the default SDDM theme, with ThemeDir pointed at /etc" \
+  "grep -qx 'Current=fedora-mojo' /etc/sddm.conf.d/fedora-mojo.conf && \
+   grep -qx 'ThemeDir=/etc/sddm/themes' /etc/sddm.conf.d/fedora-mojo.conf"
 
 check "Fedora Mojo SDDM theme QML has no syntax errors (renders headlessly without error output)" \
   "command -v Xvfb >/dev/null && command -v sddm-greeter-qt6 >/dev/null || exit 0; \
    Xvfb :97 -screen 0 1024x768x24 >/dev/null 2>&1 & xvfb_pid=\$!; sleep 1; \
-   out=\$(DISPLAY=:97 QT_QPA_PLATFORM=xcb timeout 5 sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/fedora-mojo 2>&1); \
+   out=\$(DISPLAY=:97 QT_QPA_PLATFORM=xcb timeout 5 sddm-greeter-qt6 --test-mode --theme /etc/sddm/themes/fedora-mojo 2>&1); \
    kill \$xvfb_pid 2>/dev/null; \
-   ! echo \"\$out\" | grep -qiE 'qml.*error|TypeError|ReferenceError|is not a type'"
+   ! echo \"\$out\" | grep -qiE 'qml.*error|TypeError|ReferenceError|is not a type|[Bb]inding loop'"
 
 check "dracut hostonly=no in effect (shipped initramfs is generic, not tied to the build host)" \
   "grep -rq '^hostonly=no\$' /usr/lib/dracut/dracut.conf.d/ /etc/dracut.conf.d/ 2>/dev/null"
