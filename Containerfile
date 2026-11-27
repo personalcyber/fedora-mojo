@@ -157,8 +157,10 @@ RUN set -eu; \
 # raw commit hash as an invalid app id. Both apps share the
 # org.gnome.Platform//50 runtime, which is pinned the same way.
 #
-# Installing them also transitively pulls in four GL/VAAPI/codec runtime
-# extensions (org.freedesktop.Platform.*), each commit-pinned and verified
+# Installing them also transitively pulls in GL/VAAPI/codec runtime
+# extensions. VAAPI.Intel is only auto-pulled when the build host has an
+# Intel GPU (download-if=have-intel-gpu), so CI runners skip it; it is
+# installed explicitly so the result is host-independent. The extensions (org.freedesktop.Platform.*), each commit-pinned and verified
 # the same way as the apps. The closed-set check below is still kept on
 # top of that: it's what catches an entirely unexpected extra ref showing
 # up, which per-ref commit pins alone wouldn't notice.
@@ -177,7 +179,7 @@ RUN set -eu; \
 # RPM Fusion is.
 RUN set -eu; \
     flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo; \
-    flatpak install -y --system flathub it.mijorus.gearlever com.github.tchx84.Flatseal; \
+    flatpak install -y --system flathub it.mijorus.gearlever com.github.tchx84.Flatseal org.freedesktop.Platform.VAAPI.Intel//25.08; \
     flatpak update -y --system --commit=ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464 org.gnome.Platform//50; \
     flatpak update -y --system --commit=76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835 it.mijorus.gearlever; \
     flatpak update -y --system --commit=ef9fe38e9cb96c170ea579fe1bbf8c76011255d4962d7fc4b3aa4e0a6063f8ae com.github.tchx84.Flatseal; \
