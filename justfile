@@ -99,9 +99,18 @@ desktop-layout layout:
         dconf reset -f /com/solus-project/budgie-panel/applets/ 2>/dev/null || true
     }
 
+    # budgie-panel mounts each panel/applet instance's GSettings at
+    # .../panels/{UUID}/ and .../applets/{UUID}/ -- literal curly braces
+    # around the uuid, not just the bare uuid (confirmed against
+    # panel_plugin_manager_create_applet_path() and
+    # Budgie.PanelManager.create_panel_path() in budgie-desktop's own
+    # source). The stored *list* entries (the "panels" key and each
+    # panel's "applets" key) stay bare uuids -- budgie-panel adds the
+    # braces itself when turning a list entry into a settings path; only
+    # the path these helpers write to needs them.
     write_panel() {
         local uuid="$1" location="$2" size="$3" dock="$4"; shift 4
-        local path="/com/solus-project/budgie-panel/panels/$uuid"
+        local path="/com/solus-project/budgie-panel/panels/{$uuid}"
         dconf write "$path/location" "'$location'"
         dconf write "$path/size" "$size"
         dconf write "$path/dock-mode" "$dock"
@@ -113,9 +122,43 @@ desktop-layout layout:
         dconf write "$path/applets" "${list}]"
     }
 
+    # budgie-panel resolves an applet by its "module" key first (falling
+    # back to "name" only if module is unset), matching each plugin's own
+    # .plugin keyfile "Module=" value -- NOT the plugin's directory name
+    # (e.g. org.budgie-desktop.applet.budgie-menu) and NOT its .plugin
+    # filename (e.g. BudgieMenu.plugin). Confirmed against each shipped
+    # .plugin file rather than assumed.
+    applet_module() {
+        case "$1" in
+            budgie-menu)   echo "budgiemenuapplet.so" ;;
+            icon-tasklist) echo "icontasklistapplet.so" ;;
+            tray)          echo "trayapplet.so" ;;
+            status)        echo "statusapplet.so" ;;
+            raven-trigger) echo "raventriggerapplet.so" ;;
+            clock)         echo "clockapplet.so" ;;
+            *) echo "desktop-layout: unknown applet '$1'" >&2; exit 1 ;;
+        esac
+    }
+
+    applet_name() {
+        case "$1" in
+            budgie-menu)   echo "Budgie Menu" ;;
+            icon-tasklist) echo "Icon Task List" ;;
+            tray)          echo "System Tray" ;;
+            status)        echo "Status Indicator" ;;
+            raven-trigger) echo "Raven Trigger" ;;
+            clock)         echo "Clock" ;;
+            *) echo "desktop-layout: unknown applet '$1'" >&2; exit 1 ;;
+        esac
+    }
+
     write_applet() {
-        local path="/com/solus-project/budgie-panel/applets/$1"
-        dconf write "$path/name" "'org.budgie-desktop.applet.$2'"
+        local path="/com/solus-project/budgie-panel/applets/{$1}"
+        local module name
+        module="$(applet_module "$2")"
+        name="$(applet_name "$2")"
+        dconf write "$path/module" "'$module'"
+        dconf write "$path/name" "'$name'"
         dconf write "$path/alignment" "'$3'"
         dconf write "$path/position" "$4"
     }
@@ -146,7 +189,7 @@ desktop-layout layout:
             write_applet "$a_dock" icon-tasklist center 0
             write_panel "$p1" top 28 false "$a_menu" "$a_tray" "$a_status" "$a_raven" "$a_clock"
             write_panel "$p2" bottom 58 true "$a_dock"
-            dconf write "/com/solus-project/budgie-panel/panels/$p2/transparency" "'dynamic'"
+            dconf write "/com/solus-project/budgie-panel/panels/{$p2}/transparency" "'dynamic'"
             dconf write /com/solus-project/budgie-panel/panels "['$p1', '$p2']"
             ;;
         gnome)
