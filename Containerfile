@@ -111,12 +111,10 @@ RUN set -eu; \
 # org.gnome.Platform//50 runtime, which is pinned the same way.
 #
 # Installing them also transitively pulls in four GL/VAAPI/codec runtime
-# extensions (org.freedesktop.Platform.*) that aren't independently
-# commit-pinned — they track their parent runtime's branch rather than
-# having meaningful standalone versions, so the closed-set check below
-# (exact ref list, not just "these two apps exist") is what catches an
-# unexpected extra ref or a branch-level version drift, instead of
-# chasing commit hashes for libraries that aren't really apps.
+# extensions (org.freedesktop.Platform.*), each commit-pinned and verified
+# the same way as the apps. The closed-set check below is still kept on
+# top of that: it's what catches an entirely unexpected extra ref showing
+# up, which per-ref commit pins alone wouldn't notice.
 #
 # The initial `install` necessarily runs whatever is current on Flathub
 # before the pin can be applied — there's no way around that TOFU window
@@ -136,9 +134,17 @@ RUN set -eu; \
     flatpak update -y --system --commit=ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464 org.gnome.Platform//50; \
     flatpak update -y --system --commit=76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835 it.mijorus.gearlever; \
     flatpak update -y --system --commit=ef9fe38e9cb96c170ea579fe1bbf8c76011255d4962d7fc4b3aa4e0a6063f8ae com.github.tchx84.Flatseal; \
+    flatpak update -y --system --commit=faea141e54b9c74e75d571e3b001d6a80f2b6757221fd8f29b937ff2486ee2b9 org.freedesktop.Platform.GL.default//25.08; \
+    flatpak update -y --system --commit=ea550d0bdbaa416e3b9dbd51a55f5f73612e7c3fe9b1d3733791ed4004f3020b org.freedesktop.Platform.GL.default//25.08-extra; \
+    flatpak update -y --system --commit=f68c296a49c549b75e104104d9e602b8d2992ccb94a9c3482a40b09e6d6492d7 org.freedesktop.Platform.VAAPI.Intel//25.08; \
+    flatpak update -y --system --commit=3bf3b955b0227dc63cc89d9b450a03559cf0700b6e04eeb08964d39642dc58ad org.freedesktop.Platform.codecs-extra//25.08-extra; \
     [ "$(flatpak info --system --show-commit org.gnome.Platform//50)" = "ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464" ]; \
     [ "$(flatpak info --system --show-commit it.mijorus.gearlever)" = "76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835" ]; \
     [ "$(flatpak info --system --show-commit com.github.tchx84.Flatseal)" = "ef9fe38e9cb96c170ea579fe1bbf8c76011255d4962d7fc4b3aa4e0a6063f8ae" ]; \
+    [ "$(flatpak info --system --show-commit org.freedesktop.Platform.GL.default//25.08)" = "faea141e54b9c74e75d571e3b001d6a80f2b6757221fd8f29b937ff2486ee2b9" ]; \
+    [ "$(flatpak info --system --show-commit org.freedesktop.Platform.GL.default//25.08-extra)" = "ea550d0bdbaa416e3b9dbd51a55f5f73612e7c3fe9b1d3733791ed4004f3020b" ]; \
+    [ "$(flatpak info --system --show-commit org.freedesktop.Platform.VAAPI.Intel//25.08)" = "f68c296a49c549b75e104104d9e602b8d2992ccb94a9c3482a40b09e6d6492d7" ]; \
+    [ "$(flatpak info --system --show-commit org.freedesktop.Platform.codecs-extra//25.08-extra)" = "3bf3b955b0227dc63cc89d9b450a03559cf0700b6e04eeb08964d39642dc58ad" ]; \
     expected_refs="$(printf '%s\n' \
       com.github.tchx84.Flatseal/x86_64/stable \
       it.mijorus.gearlever/x86_64/stable \

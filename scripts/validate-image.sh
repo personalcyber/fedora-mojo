@@ -95,6 +95,18 @@ check "Gear Lever pinned to the expected commit" \
 check "org.gnome.Platform runtime pinned to the expected commit" \
   "[ \"\$(flatpak info --system --show-commit org.gnome.Platform//50)\" = ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464 ]"
 
+check "org.freedesktop.Platform.GL.default//25.08 pinned to the expected commit" \
+  "[ \"\$(flatpak info --system --show-commit org.freedesktop.Platform.GL.default//25.08)\" = faea141e54b9c74e75d571e3b001d6a80f2b6757221fd8f29b937ff2486ee2b9 ]"
+
+check "org.freedesktop.Platform.GL.default//25.08-extra pinned to the expected commit" \
+  "[ \"\$(flatpak info --system --show-commit org.freedesktop.Platform.GL.default//25.08-extra)\" = ea550d0bdbaa416e3b9dbd51a55f5f73612e7c3fe9b1d3733791ed4004f3020b ]"
+
+check "org.freedesktop.Platform.VAAPI.Intel//25.08 pinned to the expected commit" \
+  "[ \"\$(flatpak info --system --show-commit org.freedesktop.Platform.VAAPI.Intel//25.08)\" = f68c296a49c549b75e104104d9e602b8d2992ccb94a9c3482a40b09e6d6492d7 ]"
+
+check "org.freedesktop.Platform.codecs-extra//25.08-extra pinned to the expected commit" \
+  "[ \"\$(flatpak info --system --show-commit org.freedesktop.Platform.codecs-extra//25.08-extra)\" = 3bf3b955b0227dc63cc89d9b450a03559cf0700b6e04eeb08964d39642dc58ad ]"
+
 check "Flathub remote explicitly configured" \
   "flatpak remotes --system --columns=name | grep -qx flathub"
 
