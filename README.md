@@ -177,11 +177,46 @@ podman build -t fedora-mojo:local -f Containerfile .
 ./scripts/validate-image.sh fedora-mojo:local
 ```
 
-### 2. Provision a new machine from the image
+### 2. Build an installable ISO (optional)
+
+`bootc install` (next section) needs *some* already-running Linux with
+`podman`/`bootc` to install from — fine if you already have one handy,
+but not if you're provisioning a bare machine or one of this fleet's
+repurposed Chromebooks from nothing. [`scripts/build-iso.sh`](scripts/build-iso.sh)
+wraps [`bootc-image-builder`](https://github.com/osbuild/bootc-image-builder)
+to turn the published image into a bootable installer ISO instead:
+
+```sh
+cp config.toml.example config.toml
+# edit config.toml: add your own SSH key and/or a password hash
+# generated with `openssl passwd -6` -- see the comments in the file.
+./scripts/build-iso.sh
+```
+
+This produces `output/bootiso/install.iso`. A few things worth knowing:
+
+- It needs `--privileged` (loop devices) and `sudo`, since
+  `bootc-image-builder` builds the disk image locally rather than in a
+  remote service.
+- The image ships no default user — FreeIPA is this fleet's system of
+  record for identity, not a baked-in account — so `config.toml`'s
+  `bootstrap` user (wheel/sudo) is what lets you log in on first boot to
+  run `ipa-client-install` at all. It's not meant to be a long-term
+  account once a machine is enrolled into FreeIPA.
+- `config.toml` is gitignored on purpose (it holds a password hash
+  and/or your SSH key): never commit the real one, only
+  `config.toml.example`.
+- By default this builds from the published `:latest` image; pass a
+  different ref as the first argument (e.g.
+  `./scripts/build-iso.sh ghcr.io/<owner>/fedora-mojo:<commit-sha>`) to
+  build from a specific build instead.
+
+### 3. Provision a new machine from the image
 
 Fedora Atomic images are installed via `bootc install`, typically from
-a live/rescue environment booted against the container image itself.
-From a booted Fedora (or any Linux with `podman`/`bootc` available):
+a live/rescue environment booted against the container image itself —
+either the ISO from the previous step, or any other Linux with
+`podman`/`bootc` available:
 
 ```sh
 sudo bootc install to-disk \
@@ -195,7 +230,7 @@ for the full set of `bootc install` modes (`to-disk`, `to-existing-root`,
 a brand-new disk, replacing an existing OS in place, or targeting an
 already-partitioned filesystem.
 
-### 3. First boot
+### 4. First boot
 
 On first boot:
 
@@ -209,7 +244,7 @@ On first boot:
    repurposed Chromebook hardware, `ujust tailscale-up` to join your
    tailnet.
 
-### 4. Ongoing updates
+### 5. Ongoing updates
 
 Each machine updates itself in place by pulling the newer published
 image and rebooting into it:

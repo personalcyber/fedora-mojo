@@ -1,0 +1,29 @@
+# Template for scripts/build-iso.sh. Copy this to config.toml (gitignored
+# -- never commit the real one, it's going to hold a password hash and/or
+# your SSH key) and fill in the placeholders below.
+#
+# fedora-mojo ships no default user -- FreeIPA is this fleet's system of
+# record for identity, not a baked-in local account. But on first boot,
+# before a machine is enrolled into FreeIPA (ujust --list -> ipa-client-
+# install), something has to be able to log in to run that enrollment at
+# all. This bootstrap user is that something: give it wheel (sudo) so it
+# can run ipa-client-install, and nothing else -- it's not meant to be a
+# long-term account once the machine is joined to FreeIPA.
+
+[[customizations.user]]
+name = "bootstrap"
+groups = ["wheel"]
+
+# Prefer an SSH key over a password where you can -- swap this for your
+# own public key (e.g. the contents of ~/.ssh/id_ed25519.pub) and drop
+# the password line entirely.
+# key = "ssh-ed25519 AAAA... you@example.com"
+
+# If you need a password (e.g. for console/physical access on a machine
+# with no network yet), generate a real hash -- never a plaintext
+# password here, and never reuse a password from elsewhere:
+#   openssl passwd -6
+# then paste the full "$6$..." hash below. A value NOT starting with
+# $6$/$5$/$2b$ is stored as plaintext by bootc-image-builder, so don't
+# paste a raw password on this line.
+password = "$6$REPLACE_ME_WITH_A_REAL_HASH"
