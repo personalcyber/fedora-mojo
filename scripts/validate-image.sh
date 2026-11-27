@@ -22,8 +22,10 @@ check() {
 
 check_recipe_syntax() {
   local recipe="$1"
+  # Header-line match is a prefix regex, not an exact ':' match, so this
+  # also covers parameterized recipes (e.g. "desktop-layout layout:").
   check "ujust $recipe recipe present and syntactically valid" \
-    "set -o pipefail; ujust --list | grep -qw '$recipe' && just --justfile /usr/share/fedora-mojo/justfile --show '$recipe' | awk -v r='$recipe:' '\$0==r{found=1; next} found' | bash -n"
+    "set -o pipefail; ujust --list | grep -qw '$recipe' && just --justfile /usr/share/fedora-mojo/justfile --show '$recipe' | awk -v r=\"^$recipe([ :]|\\\$)\" '\$0~r{found=1; next} found' | bash -n"
 }
 
 check "Budgie desktop package present" \
@@ -175,6 +177,19 @@ check "tailscaled service enabled but not started" \
 check_recipe_syntax "tailscale-up"
 
 check_recipe_syntax "tailscale-down"
+
+check "ArtCraft desktop entries + icons staged for install-apps" \
+  "for a in wordcraft gridcraft deckcraft pdfcraft; do \
+     test -f /usr/share/artcraft/desktop/ai.storyteller.\$a.desktop && \
+     test -f /usr/share/icons/hicolor/256x256/apps/ai.storyteller.\$a.png && \
+     grep -q \"^Exec=/usr/share/artcraft/\$a.AppImage\" /usr/share/artcraft/desktop/ai.storyteller.\$a.desktop; \
+   done"
+
+check_recipe_syntax "install-apps"
+
+check_recipe_syntax "desktop-layout"
+
+check_recipe_syntax "reset-system"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
