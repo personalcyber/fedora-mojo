@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Build image
         run: podman build -t fedora-mojo:ci -f Containerfile .
@@ -21,12 +22,41 @@ jobs:
       - name: Validate image
         run: ./scripts/validate-image.sh fedora-mojo:ci
 
+      - name: Save image for publish job
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: podman save -o /tmp/fedora-mojo.tar fedora-mojo:ci
+
+      - name: Upload image artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fedora-mojo-image
+          path: /tmp/fedora-mojo.tar
+          retention-days: 1
+
+  publish:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fedora-mojo-image
+          path: /tmp
+
+      - name: Load image
+        run: podman load -i /tmp/fedora-mojo.tar
+
       - name: Log in to GHCR
-        if: github.event_name == 'push'
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: podman login ghcr.io -u "${{ github.actor }}" --password-stdin <<< "$GH_TOKEN"
 
       - name: Push image
-        if: github.event_name == 'push'
         run: |
           podman tag fedora-mojo:ci "ghcr.io/${{ github.repository_owner }}/fedora-mojo:latest"
           podman tag fedora-mojo:ci "ghcr.io/${{ github.repository_owner }}/fedora-mojo:${{ github.sha }}"
