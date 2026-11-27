@@ -16,8 +16,12 @@ brew-setup:
         echo "Homebrew is already installed at $HOME/.homebrew"
         exit 0
     fi
-    # Pinned to a reviewed release tag rather than a floating HEAD/branch.
-    git clone --depth 1 --branch 7.0.16 https://github.com/Homebrew/brew "$HOME/.homebrew"
+    # Pinned to an exact commit (tag 7.0.16's SHA — a git tag ref is not
+    # immutable, unlike a commit SHA).
+    mkdir "$HOME/.homebrew"
+    (cd "$HOME/.homebrew" && git init -q && \
+        git fetch --depth 1 -q https://github.com/Homebrew/brew 7ef183d10e7d6e5620d7124b744b1dfbf69fc108 && \
+        git checkout -q FETCH_HEAD)
     echo "Homebrew installed at $HOME/.homebrew"
     echo "Add this to your shell profile to start using it:"
     echo "  eval \"\$($HOME/.homebrew/bin/brew shellenv)\""
