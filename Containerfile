@@ -102,22 +102,57 @@ RUN set -eu; \
     echo '771f61b07aaf8cc17e73cb1f93fbe88526f27b0aa82ff32d0710e2c375f49248  /usr/share/artcraft/pdfcraft.AppImage' | sha256sum -c -; \
     chmod +x /usr/share/artcraft/*.AppImage
 
-# Gear Lever for AppImage desktop integration (icons, launchers, updates).
-# Only officially distributed via Flathub. Pinned to a specific commit
-# (captured via `flatpak remote-info flathub it.mijorus.gearlever`) for the
-# same reproducibility reason as every other external fetch in this file —
-# `flatpak update --commit=` after the initial install is the verified way
-# to pin a Flatpak, since `flatpak install <ref> <commit>` rejects a raw
-# commit hash as an invalid app id.
+# Gear Lever (AppImage desktop integration) and Flatseal (per-app Flatpak
+# permission management), both only officially distributed via Flathub.
+# Pinned to specific commits (captured via `flatpak remote-info`), same as
+# every other external fetch in this file — `flatpak update --commit=` is
+# the verified way to pin, since `flatpak install <ref> <commit>` rejects a
+# raw commit hash as an invalid app id. Both apps share the
+# org.gnome.Platform//50 runtime, which is pinned the same way.
+#
+# Installing them also transitively pulls in four GL/VAAPI/codec runtime
+# extensions (org.freedesktop.Platform.*) that aren't independently
+# commit-pinned — they track their parent runtime's branch rather than
+# having meaningful standalone versions, so the closed-set check below
+# (exact ref list, not just "these two apps exist") is what catches an
+# unexpected extra ref or a branch-level version drift, instead of
+# chasing commit hashes for libraries that aren't really apps.
+#
+# The initial `install` necessarily runs whatever is current on Flathub
+# before the pin can be applied — there's no way around that TOFU window
+# for a system that's never installed these refs before. What closes the
+# gap is the explicit `[ = ]` verification after pinning: if the deployed
+# commit doesn't match, `set -eu` fails the whole build rather than
+# silently shipping an unverified version.
 #
 # The flathub remote is deliberately left enabled afterward, unlike
 # RPM Fusion: this repo's own spec calls for Flathub to be a persistent,
 # explicitly-configured remote available to end users (that's the whole
-# point of the separate Flatpak/Flathub ticket), not a one-time
-# build-time-only source the way RPM Fusion is.
-RUN flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo && \
-    flatpak install -y --system flathub it.mijorus.gearlever && \
-    flatpak update -y --system --commit=76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835 it.mijorus.gearlever
+# point of this ticket), not a one-time build-time-only source the way
+# RPM Fusion is.
+RUN set -eu; \
+    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo; \
+    flatpak install -y --system flathub it.mijorus.gearlever com.github.tchx84.Flatseal; \
+    flatpak update -y --system --commit=ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464 org.gnome.Platform//50; \
+    flatpak update -y --system --commit=76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835 it.mijorus.gearlever; \
+    flatpak update -y --system --commit=ef9fe38e9cb96c170ea579fe1bbf8c76011255d4962d7fc4b3aa4e0a6063f8ae com.github.tchx84.Flatseal; \
+    [ "$(flatpak info --system --show-commit org.gnome.Platform//50)" = "ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464" ]; \
+    [ "$(flatpak info --system --show-commit it.mijorus.gearlever)" = "76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835" ]; \
+    [ "$(flatpak info --system --show-commit com.github.tchx84.Flatseal)" = "ef9fe38e9cb96c170ea579fe1bbf8c76011255d4962d7fc4b3aa4e0a6063f8ae" ]; \
+    expected_refs="$(printf '%s\n' \
+      com.github.tchx84.Flatseal/x86_64/stable \
+      it.mijorus.gearlever/x86_64/stable \
+      org.freedesktop.Platform.GL.default/x86_64/25.08 \
+      org.freedesktop.Platform.GL.default/x86_64/25.08-extra \
+      org.freedesktop.Platform.VAAPI.Intel/x86_64/25.08 \
+      org.freedesktop.Platform.codecs-extra/x86_64/25.08-extra \
+      org.gnome.Platform/x86_64/50 \
+      | sort)"; \
+    actual_refs="$(flatpak list --system --columns=ref | sort)"; \
+    if [ "$actual_refs" != "$expected_refs" ]; then \
+      echo "Unexpected flatpak refs installed. Got: $actual_refs"; \
+      exit 1; \
+    fi
 
 # LibreOffice and Thunderbird ship by default on Fedora's traditional Budgie
 # Spin, but are NOT actually present on this Atomic image (verified

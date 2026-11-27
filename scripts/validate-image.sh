@@ -90,7 +90,22 @@ check "Gear Lever present" \
   "flatpak list --system --columns=application | grep -qx it.mijorus.gearlever"
 
 check "Gear Lever pinned to the expected commit" \
-  "flatpak info --system it.mijorus.gearlever | grep -q '76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835'"
+  "[ \"\$(flatpak info --system --show-commit it.mijorus.gearlever)\" = 76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835 ]"
+
+check "org.gnome.Platform runtime pinned to the expected commit" \
+  "[ \"\$(flatpak info --system --show-commit org.gnome.Platform//50)\" = ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464 ]"
+
+check "Flathub remote explicitly configured" \
+  "flatpak remotes --system --columns=name | grep -qx flathub"
+
+check "No unexpected flatpak refs beyond the pinned/known set" \
+  "expected=\$(printf '%s\n' com.github.tchx84.Flatseal/x86_64/stable it.mijorus.gearlever/x86_64/stable org.freedesktop.Platform.GL.default/x86_64/25.08 org.freedesktop.Platform.GL.default/x86_64/25.08-extra org.freedesktop.Platform.VAAPI.Intel/x86_64/25.08 org.freedesktop.Platform.codecs-extra/x86_64/25.08-extra org.gnome.Platform/x86_64/50 | sort); [ \"\$(flatpak list --system --columns=ref | sort)\" = \"\$expected\" ]"
+
+check "Flatseal present" \
+  "flatpak list --system --columns=application | grep -qx com.github.tchx84.Flatseal"
+
+check "Flatseal pinned to the expected commit" \
+  "[ \"\$(flatpak info --system --show-commit com.github.tchx84.Flatseal)\" = ef9fe38e9cb96c170ea579fe1bbf8c76011255d4962d7fc4b3aa4e0a6063f8ae ]"
 
 check "LibreOffice absent" \
   "! rpm -qa | grep -qi libreoffice"
