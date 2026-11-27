@@ -134,6 +134,16 @@ check "Firefox policies.json has expected policy keys as direct children (not ne
 check "Firefox Policy Generator not present in the final image" \
   "! command -v ffpolicy && ! python3 -c 'import ffpolicy' 2>/dev/null"
 
+check "tailscale package present" \
+  "rpm -q tailscale"
+
+check "tailscaled service enabled but not started" \
+  "systemctl is-enabled tailscaled && [ \"\$(systemctl is-active tailscaled)\" != active ]"
+
+check_recipe_syntax "tailscale-up"
+
+check_recipe_syntax "tailscale-down"
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
   exit 1

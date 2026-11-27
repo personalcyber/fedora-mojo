@@ -61,3 +61,11 @@ chromebook-keyboard:
     # landed, so a trigger failure here isn't fatal.
     sudo udevadm trigger --subsystem-match=input --action=change || true
     echo "Re-plug the keyboard or log out and back in if changes don't apply immediately."
+
+# Join your Tailscale network
+tailscale-up:
+    sudo tailscale up
+
+# Leave your Tailscale network
+tailscale-down:
+    sudo tailscale down

@@ -32,8 +32,14 @@ values:
 
   # Network Security
   SSLVersionMin: tls1.2
+  # Fallback: true lets Firefox fall back to the OS resolver when a DoH
+  # query doesn't resolve (e.g. the FreeIPA-joined fleet's internal
+  # domain, which isn't known at image-build time and varies per
+  # deployment) rather than hard-failing or exfiltrating internal
+  # hostnames to the DoH provider as NXDOMAIN lookups.
   DNSOverHTTPS:
     Enabled: true
+    Fallback: true
   DisabledCiphers:
     TLS_RSA_WITH_3DES_EDE_CBC_SHA: true
 

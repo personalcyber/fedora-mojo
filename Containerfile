@@ -8,13 +8,15 @@
 # pip, PySide6, the generator itself — ends up in the final image; only
 # the one generated JSON file crosses the COPY --from= boundary below.
 FROM docker.io/library/python:3.12-slim AS ffpolicy-builder
+COPY requirements-ffpolicy.txt /tmp/requirements-ffpolicy.txt
 RUN set -eu; \
     python3 -c "import urllib.request; urllib.request.urlretrieve('https://github.com/personalcyber/firefox-policy-generator/archive/3e1dc2925b83f7220938fc3589a4c8dfe3667645.tar.gz', '/tmp/ffpolicy.tar.gz')"; \
     echo '91991ba76a63e7c23ac320520d424bc85a96277d94c19de9a8b12b782fae2261  /tmp/ffpolicy.tar.gz' | sha256sum -c -; \
     mkdir /tmp/ffpolicy-src; \
     tar xzf /tmp/ffpolicy.tar.gz -C /tmp/ffpolicy-src --strip-components=1; \
     rm -f /tmp/ffpolicy.tar.gz; \
-    pip install --quiet --no-cache-dir /tmp/ffpolicy-src
+    pip install --quiet --no-cache-dir --require-hashes -r /tmp/requirements-ffpolicy.txt; \
+    pip install --quiet --no-cache-dir --no-deps /tmp/ffpolicy-src
 COPY policies.yaml /tmp/policies.yaml
 # --offline skips a live HTTPS schema sync this tool does by default on
 # every build — matching the pinning discipline of everything else here.
@@ -42,7 +44,13 @@ FROM quay.io/fedora/fedora-budgie-atomic:45
 LABEL org.opencontainers.image.title="fedora-mojo" \
       org.opencontainers.image.description="Custom Fedora Atomic build with FreeIPA"
 
-RUN dnf install -y just freeipa-client git alsa-sof-firmware alsa-ucm && dnf clean all
+RUN dnf install -y just freeipa-client git alsa-sof-firmware alsa-ucm tailscale && dnf clean all
+
+# Enabled, not started: tailscaled must be running to accept `tailscale up`
+# on a booted system, but the image build itself has no live network
+# namespace to join a tailnet into, and joining is a per-machine decision
+# the image shouldn't make for the user.
+RUN systemctl enable tailscaled
 
 # Chromebook-specific ALSA UCM profiles not yet upstreamed into alsa-ucm-conf,
 # pinned to an exact commit (tag 0.8's SHA — a git tag ref is not immutable,
