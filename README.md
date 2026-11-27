@@ -90,10 +90,14 @@ re-verifies the image on every change before it's published.
   (`snd-intel-dspcfg dsp_driver=3`) so the kernel doesn't instead load
   the incompatible AVS driver on affected hardware.
 - **Chromebook keyboard layout**: `ujust chromebook-keyboard` toggles
-  a udev hwdb override remapping the top row (Search key, back/
-  forward/refresh/fullscreen/overview, brightness, mute, volume) to
-  match a Chromebook's physical keycaps. Running it again removes the
-  override and restores the standard layout.
+  xkeyboard-config's own upstream `chromebook` XKB model (applied via
+  `localectl`, so it covers both X11 and Wayland/labwc sessions),
+  remapping the top row to match a Chromebook's physical keycaps
+  (back/forward/refresh/fullscreen, brightness, mute, volume) and
+  filling in the keys these keyboards lack outright via AltGr:
+  `AltGr+Backspace` = Delete, `AltGr+Up/Down/Left/Right` =
+  PageUp/PageDown/Home/End. Running it again restores the standard
+  layout.
 - **Intel graphics / hardware video decode**: both `intel-media-driver`
   (iHD, modern Intel GPUs) and `libva-intel-driver` (i965, older/
   legacy Intel GPUs found in most Chromebooks) are installed, so

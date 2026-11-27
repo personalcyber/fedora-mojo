@@ -89,6 +89,9 @@ check "alsa-ucm-conf-cros override file present" \
 check "snd_intel_dspcfg modprobe safety net present" \
   "grep -qx 'options snd-intel-dspcfg dsp_driver=3' /etc/modprobe.d/inteldspcfg.conf"
 
+check "xkeyboard-config ships the \"chromebook\" XKB model the chromebook-keyboard recipe depends on" \
+  "grep -q 'xkb_symbols \"chromebook\"' /usr/share/X11/xkb/symbols/inet"
+
 check_recipe_syntax "chromebook-keyboard"
 
 check "RPM Fusion free release package present" \
