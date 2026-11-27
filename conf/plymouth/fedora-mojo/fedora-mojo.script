@@ -24,44 +24,110 @@ label.sprite.SetX(Window.GetWidth() / 2 - label.image.GetWidth() / 2);
 label.sprite.SetY(logo.sprite.GetY() + logo.image.GetHeight() + 28);
 label.sprite.SetZ(10);
 
-# Gentle breathing pulse on the mark, not the wordmark, so the brand
-# name stays crisp and legible throughout boot.
-fun refresh_callback() {
-  time = Plymouth.GetTime();
-  logo.sprite.SetOpacity(0.78 + 0.22 * Math.Sin(time * 2));
-}
-Plymouth.SetRefreshFunction(refresh_callback);
-
 # A script-module theme that never implements the display-* callbacks
 # below silently has no way to show a LUKS passphrase prompt, an fsck
 # question, or a status message -- the splash would just sit there
 # through disk unlock with no visible prompt. These are the standard
 # four Plymouth expects a script theme to define.
+#
+# Modern card-style prompt: a rounded pill (prompt-pill.png) anchored
+# below the wordmark, holding the label text and, for password entry,
+# a row of dot indicators (dot-filled.png) instead of plain "•" glyphs
+# so the field reads like an actual input control.
+pill.image = Image("prompt-pill.png");
+pill.sprite = Sprite(pill.image);
+pill.sprite.SetX(Window.GetWidth() / 2 - pill.image.GetWidth() / 2);
+pill.sprite.SetY(label.sprite.GetY() + label.image.GetHeight() + 30);
+pill.sprite.SetZ(15);
+pill.sprite.SetOpacity(0);
+
 prompt.sprite = Sprite();
 prompt.sprite.SetZ(20);
+prompt.sprite.SetOpacity(0);
+
+dot_filled.image = Image("dot-filled.png");
+dots.sprites = [];
+dots.max = 24; # pill is wide enough for this many slots before it would overflow
+
+fun clear_dots() {
+  i = 0;
+  while (i < dots.sprites.GetLength()) {
+    dots.sprites[i].SetOpacity(0);
+    i++;
+  }
+}
+
+fun layout_prompt(label_width) {
+  prompt.sprite.SetX(Window.GetWidth() / 2 - label_width / 2);
+  prompt.sprite.SetY(pill.sprite.GetY() + pill.image.GetHeight() / 2 - prompt.image.GetHeight() / 2);
+}
+
+# Single refresh callback: the mark's breathing pulse, plus fading the
+# pill/label in together rather than snapping to full opacity so the
+# prompt doesn't visually jolt in next to the already-settled logo.
+prompt.target_opacity = 0;
+fun refresh_callback() {
+  time = Plymouth.GetTime();
+  logo.sprite.SetOpacity(0.78 + 0.22 * Math.Sin(time * 2));
+
+  current = pill.sprite.GetOpacity();
+  diff = prompt.target_opacity - current;
+  if (diff * diff < 0.0004) {
+    pill.sprite.SetOpacity(prompt.target_opacity);
+    prompt.sprite.SetOpacity(prompt.target_opacity);
+  } else {
+    pill.sprite.SetOpacity(current + diff * 0.25);
+    prompt.sprite.SetOpacity(current + diff * 0.25);
+  }
+}
+Plymouth.SetRefreshFunction(refresh_callback);
 
 fun show_prompt_text(message) {
-  prompt.image = Image.Text(message, 0.933, 0.953, 0.984, 1, "Montserrat Bold 22");
+  clear_dots();
+  prompt.image = Image.Text(message, 0.933, 0.953, 0.984, 1, "Montserrat Bold 20");
   prompt.sprite.SetImage(prompt.image);
-  prompt.sprite.SetX(Window.GetWidth() / 2 - prompt.image.GetWidth() / 2);
-  prompt.sprite.SetY(label.sprite.GetY() + label.image.GetHeight() + 36);
-  prompt.sprite.SetOpacity(1);
+  layout_prompt(prompt.image.GetWidth());
+  prompt.target_opacity = 1;
 }
 
 fun display_normal_callback() {
-  prompt.sprite.SetOpacity(0);
+  prompt.target_opacity = 0;
 }
 Plymouth.SetDisplayNormalFunction(display_normal_callback);
 
 fun display_password_callback(prompt_text, bullets) {
-  dots = "";
+  if (prompt_text == "") prompt_text = "Enter passphrase to unlock disk";
+  prompt.image = Image.Text(prompt_text, 0.933, 0.953, 0.984, 1, "Montserrat Bold 20");
+  prompt.sprite.SetImage(prompt.image);
+  prompt.sprite.SetX(Window.GetWidth() / 2 - prompt.image.GetWidth() / 2);
+  prompt.sprite.SetY(pill.sprite.GetY() - prompt.image.GetHeight() - 14);
+  prompt.target_opacity = 1;
+
+  # Lay out one dot per entered character, centered under the label.
+  shown = bullets;
+  if (shown > dots.max) shown = dots.max;
+  spacing = 30;
+  row_width = shown * spacing;
+  start_x = Window.GetWidth() / 2 - row_width / 2 + spacing / 2 - dot_filled.image.GetWidth() / 2;
+  dot_y = pill.sprite.GetY() + pill.image.GetHeight() / 2 - dot_filled.image.GetHeight() / 2;
+
   i = 0;
-  while (i < bullets) {
-    dots = dots + "• ";
+  while (i < shown) {
+    if (i >= dots.sprites.GetLength()) {
+      dots.sprites[i] = Sprite();
+      dots.sprites[i].SetZ(21);
+    }
+    dots.sprites[i].SetImage(dot_filled.image);
+    dots.sprites[i].SetX(start_x + i * spacing);
+    dots.sprites[i].SetY(dot_y);
+    dots.sprites[i].SetOpacity(1);
     i++;
   }
-  if (prompt_text == "") prompt_text = "Enter passphrase to unlock disk:";
-  show_prompt_text(prompt_text + "  " + dots);
+  # Hide any previously-shown dots beyond the current count (backspace).
+  while (i < dots.sprites.GetLength()) {
+    dots.sprites[i].SetOpacity(0);
+    i++;
+  }
 }
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
 
