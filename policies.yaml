@@ -32,14 +32,19 @@ values:
 
   # Network Security
   SSLVersionMin: tls1.2
-  # Fallback: true lets Firefox fall back to the OS resolver when a DoH
-  # query doesn't resolve (e.g. the FreeIPA-joined fleet's internal
-  # domain, which isn't known at image-build time and varies per
-  # deployment) rather than hard-failing or exfiltrating internal
-  # hostnames to the DoH provider as NXDOMAIN lookups.
+  # Fallback: false is deliberate: a global fallback-to-plaintext-DNS
+  # would weaken DoH for every lookup, not just the FreeIPA fleet's
+  # internal domain. The correct fix is narrower — exclude just the
+  # internal domain via ExcludedDomains — but that domain varies per
+  # deployment and isn't known at image-build time. Deployments that
+  # join a FreeIPA domain should drop an ExcludedDomains override into
+  # /usr/lib64/firefox/distribution/policies.json (or layer their own
+  # policies.yaml) naming their domain, e.g.:
+  #   DNSOverHTTPS: { Enabled: true, Fallback: false,
+  #                   ExcludedDomains: ["example.internal"] }
   DNSOverHTTPS:
     Enabled: true
-    Fallback: true
+    Fallback: false
   DisabledCiphers:
     TLS_RSA_WITH_3DES_EDE_CBC_SHA: true
 

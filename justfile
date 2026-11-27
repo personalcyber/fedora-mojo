@@ -62,9 +62,14 @@ chromebook-keyboard:
     sudo udevadm trigger --subsystem-match=input --action=change || true
     echo "Re-plug the keyboard or log out and back in if changes don't apply immediately."
 
-# Join your Tailscale network
+# Join your Tailscale network. --operator lets you manage the
+# connection afterwards without sudo; --shields-up blocks inbound
+# connections from the tailnet by default, since this is a shared
+# laptop fleet, not a set of servers meant to accept connections. Run
+# `sudo tailscale up --shields-up=false` directly if you need inbound
+# access (e.g. to SSH into this machine from elsewhere on the tailnet).
 tailscale-up:
-    sudo tailscale up
+    sudo tailscale up --operator="$(whoami)" --shields-up
 
 # Leave your Tailscale network
 tailscale-down:
