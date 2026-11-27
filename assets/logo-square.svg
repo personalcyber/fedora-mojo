@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b2a4a"/>
+      <stop offset="100%" stop-color="#0d1526"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5ad7ff"/>
+      <stop offset="55%" stop-color="#3c8ef0"/>
+      <stop offset="100%" stop-color="#2f5fd6"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- stylized "mojo" spark mark: three merging petals forming an abstract flame/spark -->
+  <g transform="translate(256,266)">
+    <path d="M0,-150
+             C58,-128 92,-78 92,-16
+             C92,52 44,108 -2,150
+             C-46,108 -92,54 -92,-10
+             C-92,-56 -66,-96 -22,-128
+             C-18,-96 -8,-70 10,-50
+             C24,-70 18,-108 0,-150 Z"
+          fill="url(#spark)"/>
+    <path d="M-2,150
+             C-36,122 -60,84 -60,38
+             C-60,6 -46,-20 -22,-36
+             C-26,-4 -14,24 10,42
+             C34,24 44,-6 38,-38
+             C64,-18 80,10 80,42
+             C80,90 46,124 6,150
+             Z"
+          fill="#0d1526" opacity="0.18"/>
+  </g>
+
+</svg>

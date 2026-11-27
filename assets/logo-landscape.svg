@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b2a4a"/>
+      <stop offset="100%" stop-color="#0d1526"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5ad7ff"/>
+      <stop offset="55%" stop-color="#3c8ef0"/>
+      <stop offset="100%" stop-color="#2f5fd6"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="360" rx="48" fill="url(#bg)"/>
+
+  <!-- icon badge, reused from logo-square.svg -->
+  <g transform="translate(180,180) scale(0.62)">
+    <path d="M0,-150
+             C58,-128 92,-78 92,-16
+             C92,52 44,108 -2,150
+             C-46,108 -92,54 -92,-10
+             C-92,-56 -66,-96 -22,-128
+             C-18,-96 -8,-70 10,-50
+             C24,-70 18,-108 0,-150 Z"
+          fill="url(#spark)"/>
+    <path d="M-2,150
+             C-36,122 -60,84 -60,38
+             C-60,6 -46,-20 -22,-36
+             C-26,-4 -14,24 10,42
+             C34,24 44,-6 38,-38
+             C64,-18 80,10 80,42
+             C80,90 46,124 6,150
+             Z"
+          fill="#0d1526" opacity="0.18"/>
+  </g>
+
+  <!-- wordmark: Montserrat Black/ExtraBold, tight tracking for a bold,
+       geometric, distinctly non-default look -->
+  <text x="330" y="210" font-family="'Montserrat', 'Poppins', 'Arial Black', sans-serif"
+        font-size="90" font-weight="800" fill="#eef3fb" letter-spacing="-1">FEDORA</text>
+  <text x="778" y="210" font-family="'Montserrat', 'Poppins', 'Arial Black', sans-serif"
+        font-size="90" font-weight="900" fill="url(#spark)" letter-spacing="-1">MOJO</text>
+</svg>

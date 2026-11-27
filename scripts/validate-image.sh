@@ -32,6 +32,17 @@ check "Budgie desktop package present" \
 check "ujust command present" \
   "command -v ujust"
 
+check "Fedora Mojo Plymouth theme files present" \
+  "test -f /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.plymouth && \
+   test -f /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.script && \
+   test -f /usr/share/plymouth/themes/fedora-mojo/logo-mark.png"
+
+check "Fedora Mojo set as the default Plymouth theme" \
+  "[ \"\$(plymouth-set-default-theme)\" = fedora-mojo ]"
+
+check "Montserrat resolves as its own font family (not a fallback) for the boot splash wordmark" \
+  "fc-match Montserrat | grep -qi '^Montserrat'"
+
 check_recipe_syntax "update"
 
 check "FreeIPA client package present" \

@@ -1,4 +1,6 @@
-# fedora-mojo
+<p align="center"><img src="assets/logo-landscape.svg" alt="Fedora Mojo" width="600"></p>
+
+# Fedora Mojo
 
 A custom Fedora Atomic (bootc) desktop image for a small fleet of
 laptops — including repurposed Chromebooks — joined to a shared
@@ -123,6 +125,9 @@ re-verifies the image on every change before it's published.
 - **`bootc upgrade`** via `ujust update` is the supported way to pull
   a newer published image and apply it on next boot — see Deployment
   below.
+- **Branded boot splash**: a Plymouth theme shows the Fedora Mojo spark
+  mark and wordmark from early boot, so machines running this image
+  are clearly identifiable as Fedora Mojo rather than stock Fedora.
 
 ### Supply-chain integrity
 

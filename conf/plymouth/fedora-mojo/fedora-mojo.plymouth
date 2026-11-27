@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Fedora Mojo
+Description=Fedora Mojo boot splash: brand spark mark on a dark gradient background
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/fedora-mojo
+ScriptFile=/usr/share/plymouth/themes/fedora-mojo/fedora-mojo.script

@@ -44,7 +44,16 @@ FROM quay.io/fedora/fedora-budgie-atomic:45
 LABEL org.opencontainers.image.title="fedora-mojo" \
       org.opencontainers.image.description="Custom Fedora Atomic build with FreeIPA"
 
-RUN dnf install -y just freeipa-client git alsa-sof-firmware alsa-ucm tailscale && dnf clean all
+RUN dnf install -y just freeipa-client git alsa-sof-firmware alsa-ucm tailscale julietaula-montserrat-fonts plymouth-plugin-script && dnf clean all
+
+# Brand the boot splash: a script-based Plymouth theme showing the
+# Fedora Mojo spark mark (pulsing) and wordmark, set as the default and
+# baked into the initramfs via -R so it's visible from early boot, not
+# just after the root filesystem is mounted.
+COPY conf/plymouth/fedora-mojo/fedora-mojo.plymouth /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.plymouth
+COPY conf/plymouth/fedora-mojo/fedora-mojo.script /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.script
+COPY assets/logo-mark.png /usr/share/plymouth/themes/fedora-mojo/logo-mark.png
+RUN plymouth-set-default-theme -R fedora-mojo
 
 # Enabled, not started: tailscaled must be running to accept `tailscale up`
 # on a booted system, but the image build itself has no live network
