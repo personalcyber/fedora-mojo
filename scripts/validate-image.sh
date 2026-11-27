@@ -39,6 +39,21 @@ check "FreeIPA client package present" \
 
 check_recipe_syntax "brew-setup"
 
+check "alsa-sof-firmware package present" \
+  "rpm -q alsa-sof-firmware"
+
+check "alsa-ucm package present" \
+  "rpm -q alsa-ucm"
+
+check "alsa-ucm-conf-cros overlay file present" \
+  "test -f /usr/share/alsa/ucm2/conf.d/sof-rt5682/sof-rt5682.conf"
+
+check "alsa-ucm-conf-cros override file present" \
+  "test -f /usr/share/alsa/ucm2/conf.d/sof-glkda7219ma/HiFi.conf"
+
+check "snd_intel_dspcfg modprobe safety net present" \
+  "grep -qx 'options snd-intel-dspcfg dsp_driver=3' /etc/modprobe.d/inteldspcfg.conf"
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
   exit 1
