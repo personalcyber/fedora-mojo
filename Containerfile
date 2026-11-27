@@ -103,9 +103,21 @@ RUN set -eu; \
     chmod +x /usr/share/artcraft/*.AppImage
 
 # Gear Lever for AppImage desktop integration (icons, launchers, updates).
-# Only officially distributed via Flathub.
+# Only officially distributed via Flathub. Pinned to a specific commit
+# (captured via `flatpak remote-info flathub it.mijorus.gearlever`) for the
+# same reproducibility reason as every other external fetch in this file —
+# `flatpak update --commit=` after the initial install is the verified way
+# to pin a Flatpak, since `flatpak install <ref> <commit>` rejects a raw
+# commit hash as an invalid app id.
+#
+# The flathub remote is deliberately left enabled afterward, unlike
+# RPM Fusion: this repo's own spec calls for Flathub to be a persistent,
+# explicitly-configured remote available to end users (that's the whole
+# point of the separate Flatpak/Flathub ticket), not a one-time
+# build-time-only source the way RPM Fusion is.
 RUN flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo && \
-    flatpak install -y --system flathub it.mijorus.gearlever
+    flatpak install -y --system flathub it.mijorus.gearlever && \
+    flatpak update -y --system --commit=76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835 it.mijorus.gearlever
 
 # LibreOffice and Thunderbird ship by default on Fedora's traditional Budgie
 # Spin, but are NOT actually present on this Atomic image (verified

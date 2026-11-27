@@ -89,6 +89,9 @@ check "PdfCraft AppImage present" \
 check "Gear Lever present" \
   "flatpak list --system --columns=application | grep -qx it.mijorus.gearlever"
 
+check "Gear Lever pinned to the expected commit" \
+  "flatpak info --system it.mijorus.gearlever | grep -q '76f4b07aefffc823b3605f9ce11fb9bb9b8beb36e6082ad390408bc7ec778835'"
+
 check "LibreOffice absent" \
   "! rpm -qa | grep -qi libreoffice"
 
