@@ -19,6 +19,17 @@ RUN dnf install -y just freeipa-client git alsa-sof-firmware alsa-ucm && dnf cle
 # cp -r here rewrote /usr/share/alsa/ucm2/Intel/sof-glkda7219max/
 # sof-glkda7219max.conf to generic stub content). -n guarantees we only ever
 # add new files, never touch anything alsa-ucm already owns.
+#
+# The integrity-check tail below deliberately uses `;` (not `&&`) between the
+# two capture lines: `var="$(rpm -V pkg)"` inherits rpm -V's own exit status
+# (verified directly in dash), and rpm -V ALWAYS exits nonzero whenever any
+# verify difference exists — including the harmless T-only ones this build
+# always produces, since container layering touches mtimes on the whole
+# tree. Chaining those captures with && would abort the build on every
+# single build, even the clean case. The actual pass/fail decision is the
+# final unconditional check, which only looks at content (never an exit
+# code): it also requires $raw to be non-empty, so a silent rpm -V failure
+# (no output on either stream) is treated as a failure too, not a pass.
 RUN mkdir /tmp/alsa-ucm-conf-cros && cd /tmp/alsa-ucm-conf-cros && \
     git init -q && \
     git fetch --depth 1 -q https://github.com/WeirdTreeThing/alsa-ucm-conf-cros a4e92135fd49e669b5ce096439289e05e25ae90c && \
@@ -27,9 +38,9 @@ RUN mkdir /tmp/alsa-ucm-conf-cros && cd /tmp/alsa-ucm-conf-cros && \
     cp -rn /tmp/alsa-ucm-conf-cros/overrides/sof-glkda7219ma /usr/share/alsa/ucm2/conf.d/ && \
     cd / && rm -rf /tmp/alsa-ucm-conf-cros && \
     rpm -q alsa-ucm > /dev/null && \
-    verify_out="$(rpm -V alsa-ucm)"; \
-    bad="$(echo "$verify_out" | grep -v '^\.\{7\}T\. ' || true)" && \
-    if [ -n "$bad" ]; then echo "alsa-ucm integrity check failed:"; echo "$bad"; exit 1; fi
+    raw="$(rpm -V alsa-ucm 2>&1)"; \
+    bad="$(echo "$raw" | grep -v '^\.\{7\}T\. ' || true)"; \
+    { [ -n "$raw" ] && [ -z "$bad" ]; } || { echo "alsa-ucm integrity check failed. Raw output: $raw"; exit 1; }
 
 COPY conf/modprobe.d/inteldspcfg.conf /etc/modprobe.d/inteldspcfg.conf
 
