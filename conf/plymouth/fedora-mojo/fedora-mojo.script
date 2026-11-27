@@ -31,3 +31,46 @@ fun refresh_callback() {
   logo.sprite.SetOpacity(0.78 + 0.22 * Math.Sin(time * 2));
 }
 Plymouth.SetRefreshFunction(refresh_callback);
+
+# A script-module theme that never implements the display-* callbacks
+# below silently has no way to show a LUKS passphrase prompt, an fsck
+# question, or a status message -- the splash would just sit there
+# through disk unlock with no visible prompt. These are the standard
+# four Plymouth expects a script theme to define.
+prompt.sprite = Sprite();
+prompt.sprite.SetZ(20);
+
+fun show_prompt_text(message) {
+  prompt.image = Image.Text(message, 0.933, 0.953, 0.984, 1, "Montserrat Bold 22");
+  prompt.sprite.SetImage(prompt.image);
+  prompt.sprite.SetX(Window.GetWidth() / 2 - prompt.image.GetWidth() / 2);
+  prompt.sprite.SetY(label.sprite.GetY() + label.image.GetHeight() + 36);
+  prompt.sprite.SetOpacity(1);
+}
+
+fun display_normal_callback() {
+  prompt.sprite.SetOpacity(0);
+}
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+fun display_password_callback(prompt_text, bullets) {
+  dots = "";
+  i = 0;
+  while (i < bullets) {
+    dots = dots + "• ";
+    i++;
+  }
+  if (prompt_text == "") prompt_text = "Enter passphrase to unlock disk:";
+  show_prompt_text(prompt_text + "  " + dots);
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+fun display_question_callback(prompt_text, entry) {
+  show_prompt_text(prompt_text + "  " + entry);
+}
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
+
+fun display_message_callback(message) {
+  show_prompt_text(message);
+}
+Plymouth.SetDisplayMessageFunction(display_message_callback);

@@ -41,7 +41,13 @@ check "Fedora Mojo set as the default Plymouth theme" \
   "[ \"\$(plymouth-set-default-theme)\" = fedora-mojo ]"
 
 check "Montserrat resolves as its own font family (not a fallback) for the boot splash wordmark" \
-  "fc-match Montserrat | grep -qi '^Montserrat'"
+  "[ \"\$(fc-match -f '%{family}' 'Montserrat:bold')\" = Montserrat ]"
+
+check "Fedora Mojo Plymouth theme implements the LUKS passphrase prompt (not just cosmetics)" \
+  "grep -q SetDisplayPasswordFunction /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.script"
+
+check "dracut hostonly=no in effect (shipped initramfs is generic, not tied to the build host)" \
+  "grep -rq '^hostonly=no\$' /usr/lib/dracut/dracut.conf.d/ /etc/dracut.conf.d/ 2>/dev/null"
 
 check_recipe_syntax "update"
 
