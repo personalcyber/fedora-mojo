@@ -1,10 +1,12 @@
 // Fedora Mojo SDDM greeter. Mirrors the Plymouth boot theme's look (dark
 // brand gradient, centered logo mark + wordmark) so the hand-off from boot
 // splash to login screen reads as one continuous brand experience, then
-// adds a card-style login form in place of SddmComponents' stock
-// white-box widgets.
+// adds a glassmorphism-style card-style login form in place of
+// SddmComponents' stock white-box widgets: soft blurred brand-color glow
+// blobs behind a translucent, frosted-looking card.
 
 import QtQuick 2.0
+import QtQuick.Effects
 import SddmComponents 2.0
 
 Rectangle {
@@ -31,6 +33,40 @@ Rectangle {
     gradient: Gradient {
         GradientStop { position: 0.0; color: container.bgTop }
         GradientStop { position: 1.0; color: container.bgBottom }
+    }
+
+    // Soft, blurred brand-color glow blobs -- the "texture" that reads
+    // through the frosted card below. Blurring a flat 2-stop gradient
+    // changes nothing visible, so these blobs exist specifically to give
+    // the blur something to do.
+    Item {
+        id: backdrop
+        anchors.fill: parent
+
+        Rectangle {
+            width: container.width * 0.5; height: width; radius: width / 2
+            x: container.width * 0.08; y: container.height * 0.05
+            color: accent; opacity: 0.35
+        }
+        Rectangle {
+            width: container.width * 0.4; height: width; radius: width / 2
+            x: container.width * 0.65; y: container.height * 0.5
+            color: cardBorder; opacity: 0.4
+        }
+        Rectangle {
+            width: container.width * 0.3; height: width; radius: width / 2
+            x: container.width * 0.1; y: container.height * 0.55
+            color: "#3c58a3"; opacity: 0.3
+        }
+    }
+
+    MultiEffect {
+        anchors.fill: backdrop
+        source: backdrop
+        autoPaddingEnabled: true
+        blurEnabled: true
+        blur: 1.0
+        blurMax: 250
     }
 
     Connections {
@@ -87,7 +123,21 @@ Rectangle {
         }
     }
 
-    // Card-style login form, replacing the stock theme's plain white box.
+    MultiEffect {
+        source: card
+        anchors.fill: card
+        shadowEnabled: true
+        shadowColor: "#000000"
+        shadowOpacity: 0.4
+        shadowBlur: 0.7
+        shadowVerticalOffset: 10
+        shadowHorizontalOffset: 0
+    }
+
+    // Card-style login form, replacing the stock theme's plain white box
+    // with a frosted-glass one: translucent fill over the blurred glow
+    // blobs above, a light (not brand-dark) border for a glass edge, a
+    // soft drop shadow for elevation, and a thin top highlight for sheen.
     Rectangle {
         id: card
         anchors.horizontalCenter: parent.horizontalCenter
@@ -95,10 +145,24 @@ Rectangle {
         anchors.topMargin: 36
         width: 400
         height: formColumn.implicitHeight + 56
-        radius: 18
-        color: cardColor
-        border.color: cardBorder
+        radius: 22
+        color: Qt.rgba(cardColor.r, cardColor.g, cardColor.b, 0.55)
+        border.color: Qt.rgba(1, 1, 1, 0.22)
         border.width: 1
+
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: 1
+            height: parent.height * 0.4
+            radius: parent.radius - 1
+            color: "transparent"
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.10) }
+                GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
+            }
+        }
 
         Column {
             id: formColumn
@@ -131,7 +195,7 @@ Rectangle {
                     id: name
                     width: parent.width; height: 36
                     radius: 10
-                    color: "#0d1526"
+                    color: Qt.rgba(13/255, 21/255, 38/255, 0.55)
                     borderColor: cardBorder
                     focusColor: accent
                     textColor: fgText
@@ -164,7 +228,7 @@ Rectangle {
                     id: password
                     width: parent.width; height: 36
                     radius: 10
-                    color: "#0d1526"
+                    color: Qt.rgba(13/255, 21/255, 38/255, 0.55)
                     borderColor: cardBorder
                     focusColor: accent
                     textColor: fgText
@@ -199,7 +263,7 @@ Rectangle {
                     ComboBox {
                         id: session
                         width: parent.width; height: 34
-                        color: "#0d1526"
+                        color: Qt.rgba(13/255, 21/255, 38/255, 0.55)
                         borderColor: cardBorder
                         focusColor: accent
                         menuColor: cardColor
@@ -229,7 +293,7 @@ Rectangle {
                     LayoutBox {
                         id: layoutBox
                         width: parent.width; height: 34
-                        color: "#0d1526"
+                        color: Qt.rgba(13/255, 21/255, 38/255, 0.55)
                         borderColor: cardBorder
                         focusColor: accent
                         menuColor: cardColor
