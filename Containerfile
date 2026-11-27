@@ -26,7 +26,10 @@ RUN mkdir /tmp/alsa-ucm-conf-cros && cd /tmp/alsa-ucm-conf-cros && \
     cp -rn /tmp/alsa-ucm-conf-cros/ucm2/. /usr/share/alsa/ucm2/ && \
     cp -rn /tmp/alsa-ucm-conf-cros/overrides/sof-glkda7219ma /usr/share/alsa/ucm2/conf.d/ && \
     cd / && rm -rf /tmp/alsa-ucm-conf-cros && \
-    rpm -V alsa-ucm | grep -v '^\.\{7\}T\. ' | { ! grep -q .; }
+    rpm -q alsa-ucm > /dev/null && \
+    verify_out="$(rpm -V alsa-ucm)"; \
+    bad="$(echo "$verify_out" | grep -v '^\.\{7\}T\. ' || true)" && \
+    if [ -n "$bad" ]; then echo "alsa-ucm integrity check failed:"; echo "$bad"; exit 1; fi
 
 COPY conf/modprobe.d/inteldspcfg.conf /etc/modprobe.d/inteldspcfg.conf
 

@@ -54,6 +54,8 @@ check "alsa-ucm-conf-cros override file present" \
 check "snd_intel_dspcfg modprobe safety net present" \
   "grep -qx 'options snd-intel-dspcfg dsp_driver=3' /etc/modprobe.d/inteldspcfg.conf"
 
+check_recipe_syntax "chromebook-keyboard"
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
   exit 1
