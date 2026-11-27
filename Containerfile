@@ -108,7 +108,16 @@ COPY conf/modprobe.d/inteldspcfg.conf /etc/modprobe.d/inteldspcfg.conf
 # ffmpeg-free -> ffmpeg conflict. Rather than just document the expected
 # removal set, this enforces it: diffs the full installed-package list
 # before/after and fails the build if anything beyond ffmpeg-free's own 7
-# split libraries gets removed.
+# split libraries (plus ffmpeg-free itself) gets removed.
+#
+# The ffmpeg swap and the two Intel VAAPI driver installs are one dnf
+# transaction, not two: both only need RPM Fusion's repos (already
+# configured by the release-RPM install above), so there's no ordering
+# dependency forcing them apart, and combining them avoids a second
+# repo-metadata resolution pass. (A plain `dnf install ffmpeg ... \
+# --allowerasing` achieves the same conflict-driven removal as `dnf swap`
+# would, since `swap` doesn't accept more than one install_spec — verified
+# directly that the removed-package set is identical either way.)
 #
 # The repos are disabled (not removed) immediately after use, so a later
 # `dnf`/`bootc` operation can't silently pull more from RPM Fusion without
@@ -121,7 +130,7 @@ RUN set -eu; \
     dnf install -y /tmp/rpmfusion-free.rpm /tmp/rpmfusion-nonfree.rpm; \
     rm -f /tmp/rpmfusion-free.rpm /tmp/rpmfusion-nonfree.rpm; \
     rpm -qa --qf '%{NAME}\n' | sort > /tmp/pkgs-before.txt; \
-    dnf swap -y ffmpeg-free ffmpeg --allowerasing; \
+    dnf install -y ffmpeg intel-media-driver libva-intel-driver --allowerasing; \
     rpm -qa --qf '%{NAME}\n' | sort > /tmp/pkgs-after.txt; \
     removed="$(comm -23 /tmp/pkgs-before.txt /tmp/pkgs-after.txt)"; \
     rm -f /tmp/pkgs-before.txt /tmp/pkgs-after.txt; \
@@ -131,21 +140,28 @@ RUN set -eu; \
       echo "Unexpected package removal during ffmpeg swap. Removed: $removed"; \
       exit 1; \
     fi; \
-    dnf install -y intel-media-driver libva-intel-driver; \
     dnf config-manager disable rpmfusion-free rpmfusion-free-updates rpmfusion-nonfree rpmfusion-nonfree-updates; \
     dnf clean all
 
 # ArtCraft office apps (AppImage), downloaded and checksum-verified against
 # the sha256 captured directly from getartcraft.com/apps at commit time.
+#
+# The four downloads are independent and run concurrently (each to its
+# own file, no shared state) rather than one after another; `wait "$pid"`
+# per PID (not a single bare `wait`) is deliberate, since bash's bare
+# `wait` doesn't propagate failure for `set -e` the way a per-PID wait
+# does -- a failed download must still fail the build, same as before.
+# Checksum verification stays per-file and unconditional either way.
 RUN set -eu; \
     mkdir -p /usr/share/artcraft; \
-    curl -fsSL -o /usr/share/artcraft/wordcraft.AppImage https://github.com/storytold/wordcraft/releases/download/v0.19.1/wordcraft-0.19.1-linux-x86_64.AppImage; \
+    curl -fsSL -o /usr/share/artcraft/wordcraft.AppImage https://github.com/storytold/wordcraft/releases/download/v0.19.1/wordcraft-0.19.1-linux-x86_64.AppImage & pid1=$!; \
+    curl -fsSL -o /usr/share/artcraft/gridcraft.AppImage https://github.com/storytold/gridcraft/releases/download/v0.19.1/gridcraft-0.19.1-linux-x86_64.AppImage & pid2=$!; \
+    curl -fsSL -o /usr/share/artcraft/deckcraft.AppImage https://github.com/storytold/deckcraft/releases/download/v0.19.1/deckcraft-0.19.1-linux-x86_64.AppImage & pid3=$!; \
+    curl -fsSL -o /usr/share/artcraft/pdfcraft.AppImage https://github.com/storytold/pdfcraft/releases/download/v0.22.0/pdfcraft-0.22.0-linux-x86_64.AppImage & pid4=$!; \
+    wait "$pid1"; wait "$pid2"; wait "$pid3"; wait "$pid4"; \
     echo '10176ffa8b8b4e0d298516c656b201959bb8280444f059d7b8838b6a691590de  /usr/share/artcraft/wordcraft.AppImage' | sha256sum -c -; \
-    curl -fsSL -o /usr/share/artcraft/gridcraft.AppImage https://github.com/storytold/gridcraft/releases/download/v0.19.1/gridcraft-0.19.1-linux-x86_64.AppImage; \
     echo '5b1ce10ad6c7a2d389249dfd259010014a85fce1aa42c627fc4cda571671e221  /usr/share/artcraft/gridcraft.AppImage' | sha256sum -c -; \
-    curl -fsSL -o /usr/share/artcraft/deckcraft.AppImage https://github.com/storytold/deckcraft/releases/download/v0.19.1/deckcraft-0.19.1-linux-x86_64.AppImage; \
     echo '8295d0fb795bbd0c7ab8ae97cdf0993e1e6cf14d90aac35aab78b816dcdaa2fe  /usr/share/artcraft/deckcraft.AppImage' | sha256sum -c -; \
-    curl -fsSL -o /usr/share/artcraft/pdfcraft.AppImage https://github.com/storytold/pdfcraft/releases/download/v0.22.0/pdfcraft-0.22.0-linux-x86_64.AppImage; \
     echo '771f61b07aaf8cc17e73cb1f93fbe88526f27b0aa82ff32d0710e2c375f49248  /usr/share/artcraft/pdfcraft.AppImage' | sha256sum -c -; \
     chmod +x /usr/share/artcraft/*.AppImage
 
