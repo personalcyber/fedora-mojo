@@ -59,10 +59,16 @@ RUN plymouth-set-default-theme -R fedora-mojo
 # SddmComponents (bundled by the sddm package itself) rather than pulling
 # in sddm-breeze/KDE's Breeze theme, which drags plasma-discover-kcm and
 # other KDE weak deps into an otherwise Budgie image.
-COPY conf/sddm/fedora-mojo/ /usr/share/sddm/themes/fedora-mojo/
-COPY assets/logo-mark.png /usr/share/sddm/themes/fedora-mojo/logo-mark.png
+#
+# Installed under /etc rather than the default /usr/share/sddm/themes:
+# /usr is the read-only bootc image tree, while /etc is the writable,
+# locally-mergeable layer -- ThemeDir is repointed at /etc/sddm/themes
+# to match, so updating/overriding this theme on a running system never
+# requires touching /usr.
+COPY conf/sddm/fedora-mojo/ /etc/sddm/themes/fedora-mojo/
+COPY assets/logo-mark.png /etc/sddm/themes/fedora-mojo/logo-mark.png
 RUN mkdir -p /etc/sddm.conf.d && \
-    printf '[Theme]\nCurrent=fedora-mojo\n' > /etc/sddm.conf.d/fedora-mojo.conf
+    printf '[Theme]\nCurrent=fedora-mojo\nThemeDir=/etc/sddm/themes\n' > /etc/sddm.conf.d/fedora-mojo.conf
 
 # Enabled, not started: tailscaled must be running to accept `tailscale up`
 # on a booted system, but the image build itself has no live network

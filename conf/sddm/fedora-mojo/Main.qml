@@ -23,7 +23,7 @@ Rectangle {
     property color cardColor: "#17233d"
     property color cardBorder: "#3d5a99"
     property color accent: "#5b7fd4"
-    property color textColor: "#eef3fb"
+    property color fgText: "#eef3fb"
     property color mutedText: "#9fb0d6"
 
     TextConstants { id: textConstants }
@@ -79,7 +79,7 @@ Rectangle {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "FEDORA MOJO"
-            color: textColor
+            color: fgText
             font.family: "Montserrat"
             font.bold: true
             font.pixelSize: 22
@@ -109,7 +109,7 @@ Rectangle {
             Text {
                 width: parent.width
                 text: textConstants.welcomeText.arg(sddm.hostName)
-                color: textColor
+                color: fgText
                 font.family: "Montserrat"
                 font.pixelSize: 15
                 horizontalAlignment: Text.AlignHCenter
@@ -134,7 +134,7 @@ Rectangle {
                     color: "#0d1526"
                     borderColor: cardBorder
                     focusColor: accent
-                    textColor: textColor
+                    textColor: fgText
                     font.pixelSize: 14
                     text: userModel.lastUser
 
@@ -167,7 +167,7 @@ Rectangle {
                     color: "#0d1526"
                     borderColor: cardBorder
                     focusColor: accent
-                    textColor: textColor
+                    textColor: fgText
                     font.pixelSize: 14
 
                     KeyNavigation.backtab: name; KeyNavigation.tab: session
@@ -203,7 +203,7 @@ Rectangle {
                         borderColor: cardBorder
                         focusColor: accent
                         menuColor: cardColor
-                        textColor: textColor
+                        textColor: fgText
                         font.pixelSize: 13
                         arrowIcon: Qt.resolvedUrl("angle-down.png")
 
@@ -233,7 +233,7 @@ Rectangle {
                         borderColor: cardBorder
                         focusColor: accent
                         menuColor: cardColor
-                        textColor: textColor
+                        textColor: fgText
                         font.pixelSize: 13
                         arrowIcon: Qt.resolvedUrl("angle-down.png")
 
@@ -277,10 +277,14 @@ Rectangle {
                     text: textConstants.login
                     width: 96; height: 36
                     radius: 10
-                    color: accent
-                    activeColor: "#4a6bc0"
-                    pressedColor: "#3c58a3"
-                    textColor: "#0d1526"
+                    // A deeper blue than the brand accent used elsewhere --
+                    // accent's own ~4:1 contrast with dark text (or white
+                    // text) was too close to the WCAG AA line; this pairs
+                    // with white text at a solid ~6.7:1.
+                    color: "#3c58a3"
+                    activeColor: accent
+                    pressedColor: "#2c4178"
+                    textColor: "#ffffff"
                     font.bold: true
 
                     onClicked: sddm.login(name.text, password.text, sessionIndex)
