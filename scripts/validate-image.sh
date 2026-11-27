@@ -20,17 +20,24 @@ check() {
   fi
 }
 
+check_recipe_syntax() {
+  local recipe="$1"
+  check "ujust $recipe recipe present and syntactically valid" \
+    "set -o pipefail; ujust --list | grep -qw '$recipe' && just --justfile /usr/share/fedora-mojo/justfile --show '$recipe' | awk -v r='$recipe:' '\$0==r{found=1; next} found' | bash -n"
+}
+
 check "Budgie desktop package present" \
   "rpm -q budgie-desktop-environment || rpm -q budgie-desktop"
 
 check "ujust command present" \
   "command -v ujust"
 
-check "ujust update recipe present" \
-  "ujust --list | grep -qw update"
+check_recipe_syntax "update"
 
 check "FreeIPA client package present" \
   "rpm -q freeipa-client"
+
+check_recipe_syntax "brew-setup"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
