@@ -55,6 +55,15 @@ COPY conf/plymouth/fedora-mojo/fedora-mojo.script /usr/share/plymouth/themes/fed
 COPY assets/logo-mark.png /usr/share/plymouth/themes/fedora-mojo/logo-mark.png
 RUN plymouth-set-default-theme -R fedora-mojo
 
+# Brand the SDDM login screen to match the boot splash. Written against
+# SddmComponents (bundled by the sddm package itself) rather than pulling
+# in sddm-breeze/KDE's Breeze theme, which drags plasma-discover-kcm and
+# other KDE weak deps into an otherwise Budgie image.
+COPY conf/sddm/fedora-mojo/ /usr/share/sddm/themes/fedora-mojo/
+COPY assets/logo-mark.png /usr/share/sddm/themes/fedora-mojo/logo-mark.png
+RUN mkdir -p /etc/sddm.conf.d && \
+    printf '[Theme]\nCurrent=fedora-mojo\n' > /etc/sddm.conf.d/fedora-mojo.conf
+
 # Enabled, not started: tailscaled must be running to accept `tailscale up`
 # on a booted system, but the image build itself has no live network
 # namespace to join a tailnet into, and joining is a per-machine decision
