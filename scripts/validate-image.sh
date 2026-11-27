@@ -56,6 +56,21 @@ check "snd_intel_dspcfg modprobe safety net present" \
 
 check_recipe_syntax "chromebook-keyboard"
 
+check "RPM Fusion free repo enabled" \
+  "rpm -q rpmfusion-free-release"
+
+check "RPM Fusion nonfree repo enabled" \
+  "rpm -q rpmfusion-nonfree-release"
+
+check "full ffmpeg installed (not the patent-safe default)" \
+  "rpm -q ffmpeg && ! rpm -q ffmpeg-free"
+
+check "intel-media-driver (iHD) present" \
+  "rpm -q intel-media-driver"
+
+check "libva-intel-driver (legacy i965) present" \
+  "rpm -q libva-intel-driver"
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
   exit 1
