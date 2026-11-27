@@ -1,0 +1,34 @@
+name: Build and publish image
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: podman build -t fedora-mojo:ci -f Containerfile .
+
+      - name: Validate image
+        run: ./scripts/validate-image.sh fedora-mojo:ci
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Push image
+        if: github.event_name == 'push'
+        run: |
+          podman tag fedora-mojo:ci "ghcr.io/${{ github.repository_owner }}/fedora-mojo:latest"
+          podman tag fedora-mojo:ci "ghcr.io/${{ github.repository_owner }}/fedora-mojo:${{ github.sha }}"
+          podman push "ghcr.io/${{ github.repository_owner }}/fedora-mojo:latest"
+          podman push "ghcr.io/${{ github.repository_owner }}/fedora-mojo:${{ github.sha }}"
