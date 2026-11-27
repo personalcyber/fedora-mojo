@@ -71,6 +71,27 @@ check "intel-media-driver (iHD) present" \
 check "libva-intel-driver (legacy i965) present" \
   "rpm -q libva-intel-driver"
 
+check "WordCraft AppImage present" \
+  "test -x /usr/share/artcraft/wordcraft.AppImage"
+
+check "GridCraft AppImage present" \
+  "test -x /usr/share/artcraft/gridcraft.AppImage"
+
+check "DeckCraft AppImage present" \
+  "test -x /usr/share/artcraft/deckcraft.AppImage"
+
+check "PdfCraft AppImage present" \
+  "test -x /usr/share/artcraft/pdfcraft.AppImage"
+
+check "Gear Lever present" \
+  "flatpak list --system --columns=application | grep -qx it.mijorus.gearlever"
+
+check "LibreOffice absent" \
+  "! rpm -qa | grep -qi libreoffice"
+
+check "Thunderbird absent" \
+  "! rpm -qa | grep -qi thunderbird"
+
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."
   exit 1

@@ -66,6 +66,31 @@ RUN FEDVER="$(rpm -E %fedora)" && \
     dnf install -y intel-media-driver libva-intel-driver && \
     dnf clean all
 
+# ArtCraft office apps (AppImage), downloaded and checksum-verified against
+# the sha256 captured directly from getartcraft.com/apps at commit time.
+RUN set -eu; \
+    mkdir -p /usr/share/artcraft; \
+    curl -fsSL -o /usr/share/artcraft/wordcraft.AppImage https://github.com/storytold/wordcraft/releases/download/v0.19.1/wordcraft-0.19.1-linux-x86_64.AppImage; \
+    echo '10176ffa8b8b4e0d298516c656b201959bb8280444f059d7b8838b6a691590de  /usr/share/artcraft/wordcraft.AppImage' | sha256sum -c -; \
+    curl -fsSL -o /usr/share/artcraft/gridcraft.AppImage https://github.com/storytold/gridcraft/releases/download/v0.19.1/gridcraft-0.19.1-linux-x86_64.AppImage; \
+    echo '5b1ce10ad6c7a2d389249dfd259010014a85fce1aa42c627fc4cda571671e221  /usr/share/artcraft/gridcraft.AppImage' | sha256sum -c -; \
+    curl -fsSL -o /usr/share/artcraft/deckcraft.AppImage https://github.com/storytold/deckcraft/releases/download/v0.19.1/deckcraft-0.19.1-linux-x86_64.AppImage; \
+    echo '8295d0fb795bbd0c7ab8ae97cdf0993e1e6cf14d90aac35aab78b816dcdaa2fe  /usr/share/artcraft/deckcraft.AppImage' | sha256sum -c -; \
+    curl -fsSL -o /usr/share/artcraft/pdfcraft.AppImage https://github.com/storytold/pdfcraft/releases/download/v0.22.0/pdfcraft-0.22.0-linux-x86_64.AppImage; \
+    echo '771f61b07aaf8cc17e73cb1f93fbe88526f27b0aa82ff32d0710e2c375f49248  /usr/share/artcraft/pdfcraft.AppImage' | sha256sum -c -; \
+    chmod +x /usr/share/artcraft/*.AppImage
+
+# Gear Lever for AppImage desktop integration (icons, launchers, updates).
+# Only officially distributed via Flathub.
+RUN flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo && \
+    flatpak install -y --system flathub it.mijorus.gearlever
+
+# LibreOffice and Thunderbird ship by default on Fedora's traditional Budgie
+# Spin, but are NOT actually present on this Atomic image (verified
+# directly: zero matching packages). Removed anyway, defensively, so the
+# image stays correct if a future Fedora release starts including them.
+RUN dnf remove -y 'libreoffice*' 'thunderbird*'
+
 COPY justfile /usr/share/fedora-mojo/justfile
 COPY scripts/ujust /usr/bin/ujust
 RUN chmod +x /usr/bin/ujust
