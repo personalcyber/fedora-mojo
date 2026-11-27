@@ -51,19 +51,41 @@ COPY conf/modprobe.d/inteldspcfg.conf /etc/modprobe.d/inteldspcfg.conf
 # RPM Fusion for full ffmpeg + both Intel VAAPI drivers, per ADR-0001: a
 # deliberate licensing trade-off accepted for complete codec/hardware-decode
 # coverage across legacy (i965) and modern (iHD) Intel graphics.
+#
+# The release RPMs are checksum-pinned (matching the base image's own fixed
+# "45" tag) before dnf ever touches them — there's no prior trust to check
+# a GPG signature against the first time, since installing these IS what
+# establishes that trust for everything RPM Fusion ships afterward.
+#
 # --allowerasing lets dnf remove whatever it needs to resolve the
-# ffmpeg-free -> ffmpeg conflict. Verified directly (diffed the full
-# installed-package list before/after on this exact base image) that it
-# removes exactly ffmpeg-free's own 7 split libraries (libavcodec-free,
-# libavdevice-free, libavfilter-free, libavformat-free, libavutil-free,
-# libswresample-free, libswscale-free) and nothing else — no unrelated
-# collateral removal on this image.
-RUN FEDVER="$(rpm -E %fedora)" && \
-    dnf install -y \
-      "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDVER}.noarch.rpm" \
-      "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDVER}.noarch.rpm" && \
-    dnf swap -y ffmpeg-free ffmpeg --allowerasing && \
-    dnf install -y intel-media-driver libva-intel-driver && \
+# ffmpeg-free -> ffmpeg conflict. Rather than just document the expected
+# removal set, this enforces it: diffs the full installed-package list
+# before/after and fails the build if anything beyond ffmpeg-free's own 7
+# split libraries gets removed.
+#
+# The repos are disabled (not removed) immediately after use, so a later
+# `dnf`/`bootc` operation can't silently pull more from RPM Fusion without
+# deliberately re-enabling it — the packages already installed stay put.
+RUN set -eu; \
+    curl -fsSL -o /tmp/rpmfusion-free.rpm https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-45.noarch.rpm; \
+    echo '761100efc44f57e16dadec1780582f725028e212593740e955dbc7d5b2de81bb  /tmp/rpmfusion-free.rpm' | sha256sum -c -; \
+    curl -fsSL -o /tmp/rpmfusion-nonfree.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-45.noarch.rpm; \
+    echo '04582bbbb8edf54cc5340d807fb57ae44fea2e8c513b1928a9637b518817328e  /tmp/rpmfusion-nonfree.rpm' | sha256sum -c -; \
+    dnf install -y /tmp/rpmfusion-free.rpm /tmp/rpmfusion-nonfree.rpm; \
+    rm -f /tmp/rpmfusion-free.rpm /tmp/rpmfusion-nonfree.rpm; \
+    rpm -qa --qf '%{NAME}\n' | sort > /tmp/pkgs-before.txt; \
+    dnf swap -y ffmpeg-free ffmpeg --allowerasing; \
+    rpm -qa --qf '%{NAME}\n' | sort > /tmp/pkgs-after.txt; \
+    removed="$(comm -23 /tmp/pkgs-before.txt /tmp/pkgs-after.txt)"; \
+    rm -f /tmp/pkgs-before.txt /tmp/pkgs-after.txt; \
+    allowed_sorted="$(printf '%s\n' ffmpeg-free libavcodec-free libavdevice-free libavfilter-free libavformat-free libavutil-free libswresample-free libswscale-free | sort)"; \
+    removed_sorted="$(printf '%s\n' "$removed" | sort)"; \
+    if [ "$removed_sorted" != "$allowed_sorted" ]; then \
+      echo "Unexpected package removal during ffmpeg swap. Removed: $removed"; \
+      exit 1; \
+    fi; \
+    dnf install -y intel-media-driver libva-intel-driver; \
+    dnf config-manager disable rpmfusion-free rpmfusion-free-updates rpmfusion-nonfree rpmfusion-nonfree-updates; \
     dnf clean all
 
 # ArtCraft office apps (AppImage), downloaded and checksum-verified against

@@ -56,11 +56,14 @@ check "snd_intel_dspcfg modprobe safety net present" \
 
 check_recipe_syntax "chromebook-keyboard"
 
-check "RPM Fusion free repo enabled" \
+check "RPM Fusion free release package present" \
   "rpm -q rpmfusion-free-release"
 
-check "RPM Fusion nonfree repo enabled" \
+check "RPM Fusion nonfree release package present" \
   "rpm -q rpmfusion-nonfree-release"
+
+check "RPM Fusion repos disabled after use" \
+  "! dnf repolist --enabled 2>/dev/null | grep -qi rpmfusion"
 
 check "full ffmpeg installed (not the patent-safe default)" \
   "rpm -q ffmpeg && ! rpm -q ffmpeg-free"
