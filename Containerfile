@@ -183,6 +183,30 @@ RUN set -eu; \
     echo '771f61b07aaf8cc17e73cb1f93fbe88526f27b0aa82ff32d0710e2c375f49248  /usr/share/artcraft/pdfcraft.AppImage' | sha256sum -c -; \
     chmod +x /usr/share/artcraft/*.AppImage
 
+# Stage (but don't yet expose) a desktop entry + icon per ArtCraft app,
+# pulled straight out of each AppImage's own bundled metadata rather than
+# hand-written here, so name/icon/MIME associations stay in sync with
+# upstream. Staged under /usr/share/artcraft/desktop instead of
+# /usr/share/applications so the apps don't appear in every user's menu
+# unconditionally -- `ujust install-apps` (justfile) is what actually
+# opts a user's own menu into them, matching this fleet's
+# install-on-request model for ArtCraft rather than baking it in for
+# everyone.
+RUN set -eu; \
+    mkdir -p /usr/share/artcraft/desktop /usr/share/icons/hicolor/256x256/apps; \
+    for app in wordcraft gridcraft deckcraft pdfcraft; do \
+        id="ai.storyteller.$app"; \
+        workdir="$(mktemp -d)"; \
+        ( cd "$workdir" && "/usr/share/artcraft/$app.AppImage" --appimage-extract "$id"'*' > /dev/null ); \
+        test -f "$workdir/squashfs-root/$id.desktop"; \
+        test -f "$workdir/squashfs-root/$id.png"; \
+        sed -E "s#^(Exec|TryExec)=$app#\\1=/usr/share/artcraft/$app.AppImage#" \
+            "$workdir/squashfs-root/$id.desktop" > "/usr/share/artcraft/desktop/$id.desktop"; \
+        cp "$workdir/squashfs-root/$id.png" "/usr/share/icons/hicolor/256x256/apps/$id.png"; \
+        rm -rf "$workdir"; \
+    done; \
+    gtk-update-icon-cache /usr/share/icons/hicolor >/dev/null 2>&1 || true
+
 # Gear Lever (AppImage desktop integration) and Flatseal (per-app Flatpak
 # permission management), both only officially distributed via Flathub.
 # Pinned to specific commits (captured via `flatpak remote-info`), same as
