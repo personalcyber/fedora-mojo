@@ -34,7 +34,7 @@ brew-setup:
 # browser/media keys, and AltGr fills in the keys these keyboards lack
 # outright (AltGr+Backspace = Delete, AltGr+arrows = Home/End/PgUp/PgDn).
 # Uses xkeyboard-config's own upstream "chromebook" XKB model (set via
-# localectl, so it applies to both X11 and Wayland/labwc sessions)
+# localectl, so it applies to both X11 and Wayland/COSMIC sessions)
 # rather than a hand-rolled remap -- it already defines exactly this.
 chromebook-keyboard:
     #!/usr/bin/env bash

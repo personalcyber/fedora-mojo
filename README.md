@@ -57,7 +57,10 @@ re-verifies the image on every change before it's published.
 ### Desktop and applications
 
 - **COSMIC desktop environment**, Fedora's COSMIC Atomic spin as the
-  base.
+  base, with **cosmic-greeter** as the login screen (the base image's
+  default display manager; SDDM is not installed). Panel, dock, and
+  theme layout are configured through COSMIC Settings rather than
+  image-shipped recipes.
 - **ArtCraft** office/creative suite (WordCraft, GridCraft, DeckCraft,
   PdfCraft) installed as checksum-verified AppImages under
   `/usr/share/artcraft/`, with **Gear Lever** (via Flatpak) to give
@@ -91,7 +94,7 @@ re-verifies the image on every change before it's published.
   the incompatible AVS driver on affected hardware.
 - **Chromebook keyboard layout**: `ujust chromebook-keyboard` toggles
   xkeyboard-config's own upstream `chromebook` XKB model (applied via
-  `localectl`, so it covers both X11 and Wayland/labwc sessions),
+  `localectl`, so it covers both X11 and Wayland/COSMIC sessions),
   remapping the top row to match a Chromebook's physical keycaps
   (back/forward/refresh/fullscreen, brightness, mute, volume) and
   filling in the keys these keyboards lack outright via AltGr:
