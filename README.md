@@ -4,11 +4,11 @@
 
 A custom Fedora Atomic (bootc) desktop image for a small fleet of
 laptops — including repurposed Chromebooks — joined to a shared
-FreeIPA domain. Built on Fedora Budgie Atomic 45.
+FreeIPA domain. Built on Fedora COSMIC Atomic 45.
 
 ## Executive summary
 
-fedora-mojo turns a stock Fedora Budgie Atomic image into a
+fedora-mojo turns a stock Fedora COSMIC Atomic image into a
 ready-to-deploy fleet image for a household or small organization that
 wants centrally managed identity, consistent desktop software, and
 hardware support for commodity/repurposed laptops (notably
@@ -19,7 +19,7 @@ Every machine built from this image:
 
 - Joins a shared **FreeIPA** domain for centralized user accounts and
   group-based privilege gating (e.g. who gets Homebrew access).
-- Gets a **Budgie** desktop with common productivity and creative
+- Gets a **COSMIC** desktop with common productivity and creative
   software pre-installed — no per-machine app installs needed.
 - Has working **audio and keyboard support on legacy Chromebook
   hardware**, which upstream Fedora doesn't configure out of the box.
@@ -56,7 +56,7 @@ re-verifies the image on every change before it's published.
 
 ### Desktop and applications
 
-- **Budgie desktop environment**, Fedora's Budgie Atomic spin as the
+- **COSMIC desktop environment**, Fedora's COSMIC Atomic spin as the
   base.
 - **ArtCraft** office/creative suite (WordCraft, GridCraft, DeckCraft,
   PdfCraft) installed as checksum-verified AppImages under
@@ -154,7 +154,7 @@ request before anything is published.
 - A machine capable of running `podman` (for building/testing
   locally) — not required if you only consume the published image.
 - A target machine already running a Fedora Atomic/bootc-based OS
-  (e.g. a stock Fedora Budgie Atomic install), or one being freshly
+  (e.g. a stock Fedora COSMIC Atomic install), or one being freshly
   installed from this image's ISO/disk image.
 - Network access to `ghcr.io` (or your own registry, if you publish
   elsewhere) and, for ongoing use, to your FreeIPA server and Tailscale

@@ -1,6 +1,6 @@
 # fedora-mojo
 
-A custom Fedora Atomic (bootc) desktop image, built on Fedora Budgie Atomic, for a small fleet of laptops — including repurposed Chromebooks — joined to a shared FreeIPA domain for centralized identity and group-based privilege gating.
+A custom Fedora Atomic (bootc) desktop image, built on Fedora COSMIC Atomic, for a small fleet of laptops — including repurposed Chromebooks — joined to a shared FreeIPA domain for centralized identity and group-based privilege gating.
 
 ## Language
 

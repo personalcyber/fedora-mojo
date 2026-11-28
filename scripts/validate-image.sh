@@ -28,8 +28,14 @@ check_recipe_syntax() {
     "set -o pipefail; ujust --list | grep -qw '$recipe' && just --justfile /usr/share/fedora-mojo/justfile --show '$recipe' | awk -v r=\"^$recipe([ :]|\\\$)\" '\$0~r{found=1; next} found' | bash -n"
 }
 
-check "Budgie desktop package present" \
-  "rpm -q budgie-desktop-environment || rpm -q budgie-desktop"
+check "COSMIC session package present" \
+  "rpm -q cosmic-session"
+
+check "COSMIC greeter is the enabled display manager" \
+  "rpm -q cosmic-greeter && [ \"\$(readlink /etc/systemd/system/display-manager.service)\" = /usr/lib/systemd/system/cosmic-greeter.service ]"
+
+check "SDDM absent" \
+  "! rpm -q sddm"
 
 check "ujust command present" \
   "command -v ujust"
@@ -47,22 +53,6 @@ check "Montserrat resolves as its own font family (not a fallback) for the boot 
 
 check "Fedora Mojo Plymouth theme implements the LUKS passphrase prompt (not just cosmetics)" \
   "grep -q SetDisplayPasswordFunction /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.script"
-
-check "Fedora Mojo SDDM theme files present under /etc (writable layer, not read-only /usr)" \
-  "test -f /etc/sddm/themes/fedora-mojo/metadata.desktop && \
-   test -f /etc/sddm/themes/fedora-mojo/Main.qml && \
-   test -f /etc/sddm/themes/fedora-mojo/logo-mark.png"
-
-check "Fedora Mojo set as the default SDDM theme, with ThemeDir pointed at /etc" \
-  "grep -qx 'Current=fedora-mojo' /etc/sddm.conf.d/fedora-mojo.conf && \
-   grep -qx 'ThemeDir=/etc/sddm/themes' /etc/sddm.conf.d/fedora-mojo.conf"
-
-check "Fedora Mojo SDDM theme QML has no syntax errors (renders headlessly without error output)" \
-  "command -v Xvfb >/dev/null && command -v sddm-greeter-qt6 >/dev/null || exit 0; \
-   Xvfb :97 -screen 0 1024x768x24 >/dev/null 2>&1 & xvfb_pid=\$!; sleep 1; \
-   out=\$(DISPLAY=:97 QT_QPA_PLATFORM=xcb timeout 5 sddm-greeter-qt6 --test-mode --theme /etc/sddm/themes/fedora-mojo 2>&1); \
-   kill \$xvfb_pid 2>/dev/null; \
-   ! echo \"\$out\" | grep -qiE 'qml.*error|TypeError|ReferenceError|is not a type|[Bb]inding loop'"
 
 check "dracut hostonly=no in effect (shipped initramfs is generic, not tied to the build host)" \
   "grep -rq '^hostonly=no\$' /usr/lib/dracut/dracut.conf.d/ /etc/dracut.conf.d/ 2>/dev/null"
@@ -190,8 +180,6 @@ check "ArtCraft desktop entries + icons staged for install-apps" \
    done"
 
 check_recipe_syntax "install-apps"
-
-check_recipe_syntax "desktop-layout"
 
 check_recipe_syntax "reset-system"
 
