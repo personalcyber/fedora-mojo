@@ -23,7 +23,7 @@ check() {
 check_recipe_syntax() {
   local recipe="$1"
   # Header-line match is a prefix regex, not an exact ':' match, so this
-  # also covers parameterized recipes (e.g. "desktop-layout layout:").
+  # also covers parameterized recipes (e.g. "name arg:").
   check "ujust $recipe recipe present and syntactically valid" \
     "set -o pipefail; ujust --list | grep -qw '$recipe' && just --justfile /usr/share/fedora-mojo/justfile --show '$recipe' | awk -v r=\"^$recipe([ :]|\\\$)\" '\$0~r{found=1; next} found' | bash -n"
 }
