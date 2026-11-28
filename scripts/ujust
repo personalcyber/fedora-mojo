@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 # Thin wrapper giving fedora-mojo a ujust-style UX on top of stock `just`,
-# since this image builds on official Fedora Budgie Atomic rather than a
+# since this image builds on official Fedora COSMIC Atomic rather than a
 # ublue-os base that ships ujust itself.
 exec just --justfile /usr/share/fedora-mojo/justfile "$@"

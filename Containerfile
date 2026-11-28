@@ -39,7 +39,7 @@ COPY policies.yaml /tmp/policies.yaml
 RUN python3 -m ffpolicy generate --offline /tmp/policies.yaml -o /tmp/raw-policies.json && \
     python3 -c "import json; d = json.load(open('/tmp/raw-policies.json')); json.dump({'policies': d['policies']['values']}, open('/tmp/policies.json', 'w'), indent=2, sort_keys=True)"
 
-FROM quay.io/fedora/fedora-budgie-atomic:45
+FROM quay.io/fedora-ostree-desktops/cosmic-atomic:45
 
 LABEL org.opencontainers.image.title="fedora-mojo" \
       org.opencontainers.image.description="Custom Fedora Atomic build with FreeIPA"
@@ -54,21 +54,6 @@ COPY conf/plymouth/fedora-mojo/fedora-mojo.plymouth /usr/share/plymouth/themes/f
 COPY conf/plymouth/fedora-mojo/fedora-mojo.script /usr/share/plymouth/themes/fedora-mojo/fedora-mojo.script
 COPY assets/logo-mark.png /usr/share/plymouth/themes/fedora-mojo/logo-mark.png
 RUN plymouth-set-default-theme -R fedora-mojo
-
-# Brand the SDDM login screen to match the boot splash. Written against
-# SddmComponents (bundled by the sddm package itself) rather than pulling
-# in sddm-breeze/KDE's Breeze theme, which drags plasma-discover-kcm and
-# other KDE weak deps into an otherwise Budgie image.
-#
-# Installed under /etc rather than the default /usr/share/sddm/themes:
-# /usr is the read-only bootc image tree, while /etc is the writable,
-# locally-mergeable layer -- ThemeDir is repointed at /etc/sddm/themes
-# to match, so updating/overriding this theme on a running system never
-# requires touching /usr.
-COPY conf/sddm/fedora-mojo/ /etc/sddm/themes/fedora-mojo/
-COPY assets/logo-mark.png /etc/sddm/themes/fedora-mojo/logo-mark.png
-RUN mkdir -p /etc/sddm.conf.d && \
-    printf '[Theme]\nCurrent=fedora-mojo\nThemeDir=/etc/sddm/themes\n' > /etc/sddm.conf.d/fedora-mojo.conf
 
 # Enabled, not started: tailscaled must be running to accept `tailscale up`
 # on a booted system, but the image build itself has no live network
@@ -273,8 +258,8 @@ RUN set -eu; \
       exit 1; \
     fi
 
-# LibreOffice and Thunderbird ship by default on Fedora's traditional Budgie
-# Spin, but are NOT actually present on this Atomic image (verified
+# LibreOffice and Thunderbird ship by default on some traditional Fedora
+# Spins, but are NOT actually present on this Atomic image (verified
 # directly: zero matching packages). Removed anyway, defensively, so the
 # image stays correct if a future Fedora release starts including them.
 RUN dnf remove -y 'libreoffice*' 'thunderbird*'
